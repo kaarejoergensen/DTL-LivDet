@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 
 def main(args=None):
-    pass
+    print(args)
 
 
 if __name__ == '__main__':
