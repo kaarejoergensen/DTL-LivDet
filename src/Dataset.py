@@ -9,10 +9,10 @@ class Dataset(object):
     def __init__(self, config):
         self.config = config
         self.autotune = tf.data.experimental.AUTOTUNE
-        self.load_data()
+        self.feed = iter(self.load_data())
 
     def load_data(self):
-        data_path = Path(self.config.args.data)
+        data_path = Path(self.config.args.data_path)
         logging.info("Loading data from data dir {}".format(data_path.absolute()))
         data_samples = []
         for path in data_path.rglob('*.png'):

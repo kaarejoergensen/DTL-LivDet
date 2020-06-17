@@ -1,19 +1,26 @@
-import tensorflow as tf
 import logging
 import os
+
+import tensorflow as tf
 
 
 class Config(object):
     IMG_SIZE = 224
+    TRU_PARAMETERS = {
+        "alpha": 1e-3,
+        "beta": 1e-2,
+        "mu_update_rate": 1e-3,
+    }
 
     def __init__(self, args=None):
         self.args = args
-        if not os.path.exists(args.log):
-            os.mkdir(args.log)
+        logging_path = args.logging_path
+        if not os.path.exists(logging_path):
+            os.mkdir(logging_path)
         logging.basicConfig(level=logging.getLevelName(args.logging),
                             format="%(asctime)s [%(levelname)s] %(message)s",
                             handlers=[
-                                logging.FileHandler("{}/main.log".format(args.log)),
+                                logging.FileHandler("{}/main.log".format(logging_path)),
                                 logging.StreamHandler()
                             ])
         logging.info("Arguments: {}".format(args))
