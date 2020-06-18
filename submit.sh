@@ -36,10 +36,10 @@ module load cuda/10.2
 /appl/cuda/10.2/samples/NVIDIA_CUDA-10.2_Samples/bin/x86_64/linux/release/deviceQuery
 
 module load python/3.7.3
-pip3 install --user tensorflow
 
 cd ~/Documents/DTL-LivDet
-pipenv install && pipenv lock
+pipenv lock -r > requirements.txt
+pip install -r requirements.txt --user
 
 cd src
 python Main.py
