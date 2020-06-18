@@ -18,6 +18,7 @@ DTN for Zero-shot Face Anti-spoofing
 Losses class.
 
 """
+
 import numpy as np
 import tensorflow as tf
 

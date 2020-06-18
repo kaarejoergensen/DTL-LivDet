@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument("--logging", default="DEBUG",
                         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], help="Logging level")
     parser.add_argument("--plot", type=bool, default=False, help="Plot the training to files in the logs folder")
-    parser.add_argument("--mode", default="train",
+    parser.add_argument("--modet", default="train",
                         choices=["train", "test"], help="Train or test")
 
     main(parser.parse_args())

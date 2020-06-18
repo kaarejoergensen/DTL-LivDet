@@ -4,7 +4,6 @@ from models.Common import Downsample
 
 
 class TRU(tf.keras.Model):
-
     def __init__(self, filters, idx, alpha=1e-3, beta=1e-4, size=3, apply_batchnorm=True):
         super(TRU, self).__init__()
         self.apply_batchnorm = apply_batchnorm
@@ -51,7 +50,7 @@ class Linear(tf.keras.layers.Layer):
         self.alpha = alpha
         self.beta = beta
         # mean, eigenvalue and trace for each mini-batch
-        self.mu_of_visit = 0
+        self.mu_of_visit = 0.
         self.eigenvalue = 0.
         self.trace = 0.
 
@@ -62,6 +61,11 @@ class Linear(tf.keras.layers.Layer):
 
         if training and num_of_visit > 1:
             # use only the visiting samples
+            # index = tf.where(tf.greater(mask, tf.constant(0.)))
+            # index_not = tf.where(tf.equal(mask, tf.constant(0.)))
+            # x_sub = tf.gather_nd(x, index) - tf.stop_gradient(self.mu)
+            # x_not = tf.gather_nd(x, index_not) - tf.stop_gradient(self.mu)
+            # x_sub_t = tf.transpose(x_sub, [1, 0])
             index = tf.where(tf.greater(mask[:, 0], tf.constant(0.)))
             index_not = tf.where(tf.equal(mask[:, 0], tf.constant(0.)))
             x_sub = tf.gather_nd(x, index) - tf.stop_gradient(self.mu)

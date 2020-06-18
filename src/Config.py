@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 class Config(object):
-    IMG_SIZE = 224
+    IMG_SIZE = 256
     TRU_PARAMETERS = {
         "alpha": 1e-3,
         "beta": 1e-2,

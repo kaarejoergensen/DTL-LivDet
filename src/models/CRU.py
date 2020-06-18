@@ -12,12 +12,8 @@ class CRU(tf.keras.Model):
         filters = int(filters)
 
         for count in range(self.COUNT):
-            conv = tf.keras.layers.Conv2D(filters,
-                                          (size, size),
-                                          strides=1,
-                                          padding='SAME',
-                                          kernel_initializer=initializer,
-                                          use_bias=False)
+            conv = tf.keras.layers.Conv2D(filters, (size, size), strides=1, padding='SAME',
+                                          kernel_initializer=initializer, use_bias=False)
             batchnorm = tf.keras.layers.BatchNormalization()
             setattr(self, "conv_{}".format(count), conv)
             setattr(self, "batchnorm_{}".format(count), batchnorm)
