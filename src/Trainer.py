@@ -1,3 +1,4 @@
+import logging
 import time
 
 import cv2
@@ -51,7 +52,7 @@ class Error:
         self.step_val = 0
 
 
-class Model:
+class Trainer:
     def __init__(self, config):
         self.config = config
         # model
@@ -66,6 +67,7 @@ class Model:
         # model saving setting
         self.last_epoch = 0
         self.checkpoint_manager = []
+        self.compile()
 
     def compile(self):
         checkpoint_dir = self.config.args.logging_path
@@ -76,9 +78,9 @@ class Model:
         checkpoint.restore(last_checkpoint)
         if last_checkpoint:
             self.last_epoch = int(last_checkpoint.split('-')[-1])
-            print("Restored from {}".format(last_checkpoint))
+            logging.info("Restored from {}".format(last_checkpoint))
         else:
-            print("Initializing from scratch.")
+            logging.info("Initializing from scratch.")
 
     def train(self, train, val=None):
         config = self.config
@@ -101,15 +103,16 @@ class Model:
                     self.train_one_step(next(it), global_step, True)
                 # display loss
                 global_step += 1
-                print('Epoch {:d}-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
-                      'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
-                      format(epoch + 1, step + 1, step_per_epoch,
-                             self.depth_map_loss(depth_map_loss),
-                             self.class_loss(class_loss),
-                             self.route_loss(route_loss), eigenvalue, trace,
-                             self.uniq_loss(uniq_loss),
-                             spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                             spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
+                logging.info(
+                    'Epoch {:d}-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                    'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
+                        format(epoch + 1, step + 1, step_per_epoch,
+                               self.depth_map_loss(depth_map_loss),
+                               self.class_loss(class_loss),
+                               self.route_loss(route_loss), eigenvalue, trace,
+                               self.uniq_loss(uniq_loss),
+                               spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
+                               spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
                 # plot the figure
                 if self.config.plot:
                     if (step + 1) % 400 == 0:
@@ -119,7 +122,7 @@ class Model:
             # save the model
             if (epoch + 1) % 1 == 0:
                 self.checkpoint_manager.save(checkpoint_number=epoch + 1)
-            print('\n', end='\r')
+            logging.info('\n', end='\r')
 
             ''' eval phase'''
             if val is not None:
@@ -127,15 +130,15 @@ class Model:
                     depth_map_loss, class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                         self.train_one_step(next(it_val), global_step, False)
                     # display something
-                    print('    Val-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
-                          'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
-                          format(step + 1, step_per_epoch_val,
-                                 self.depth_map_loss(depth_map_loss, val=1),
-                                 self.class_loss(class_loss, val=1),
-                                 self.route_loss(route_loss, val=1), eigenvalue, trace,
-                                 self.recon_loss(uniq_loss, val=1),
-                                 spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                                 spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
+                    logging.info('Val-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                                 'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
+                                 format(step + 1, step_per_epoch_val,
+                                        self.depth_map_loss(depth_map_loss, val=1),
+                                        self.class_loss(class_loss, val=1),
+                                        self.route_loss(route_loss, val=1), eigenvalue, trace,
+                                        self.recon_loss(uniq_loss, val=1),
+                                        spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
+                                        spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
                     # plot the figure
                     if self.config.args.plot:
                         if (step + 1) % 100 == 0:
@@ -147,13 +150,13 @@ class Model:
                 self.uniq_loss.reset()
 
             # time of one epoch
-            print('\n    Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
+            logging.info('\n    Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
         return 0
 
     def train_one_step(self, data_batch, step, training):
         dtn = self.dtn
         dtn_op = self.dtn_op
-        image, dmap, labels = data_batch
+        image, labels = data_batch
         with tf.GradientTape() as tape:
             dmap_pred, cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, eigenvalue, trace = \
                 dtn(image, labels, True)

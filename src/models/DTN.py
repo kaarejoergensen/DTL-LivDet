@@ -3,7 +3,8 @@ import logging
 import tensorflow as tf
 
 from models.CRU import CRU
-from models.SFL import Conv, SFL
+from models.Common import Conv
+from models.SFL import SFL
 from models.TRU import TRU
 
 

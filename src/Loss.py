@@ -66,7 +66,6 @@ def leaf_l2_loss(xlist, y, masklist):
     loss_list = []
     for x, mask in zip(xlist, masklist):
         xshape = x.shape
-        print(x.shape, y.shape, mask.shape)
         input()
         # spoof
         spoof_loss = tf.reduce_mean(tf.reshape(tf.square(x - y), [xshape[0], -1]), axis=1)

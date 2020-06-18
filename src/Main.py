@@ -5,17 +5,17 @@ from argparse import ArgumentParser
 
 from Config import Config
 from Dataset import Dataset
-from Model import Model
+from Trainer import Trainer
 
 
 def main(args=None):
     try:
         config = Config(args)
-        dataset = Dataset(config)
-        model = Model(config)
 
-        model.compile()
-        model.train(dataset, None)
+        dataset = Dataset(config)
+
+        trainer = Trainer(config)
+        trainer.train(dataset, None)
     except KeyboardInterrupt:
         raise
     except Exception as e:

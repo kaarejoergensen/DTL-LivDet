@@ -9,7 +9,8 @@ class Dataset(object):
     def __init__(self, config):
         self.config = config
         self.autotune = tf.data.experimental.AUTOTUNE
-        self.feed = iter(self.load_data())
+        self.train_dataset = self.load_data()
+        self.feed = iter(self.train_dataset)
 
     def load_data(self):
         data_path = Path(self.config.args.data_path)
@@ -32,7 +33,7 @@ class Dataset(object):
             # convert the path to a list of path components
             parts = tf.strings.split(file_path, os.path.sep)
             # The second to last is the class-directory
-            return parts[-3]
+            return tf.strings.regex_full_match(parts[-3], "(?i)fake")
 
         def decode_img(img):
             # convert the compressed string to a 3D uint8 tensor
