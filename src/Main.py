@@ -40,6 +40,7 @@ if __name__ == '__main__':
     parser.add_argument("--logging", default="DEBUG",
                         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], help="Logging level")
     parser.add_argument("--plot", action='store_true', help="Plot the training to files in the logs folder")
+    parser.add_argument("--ignore_checkpoint", action='store_true', help="Ignore checkpoint and start from scratch")
     parser.add_argument("--mode", default="train",
                         choices=["train", "test"], help="Train or test")
 

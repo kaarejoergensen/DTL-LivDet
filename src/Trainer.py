@@ -72,13 +72,16 @@ class Trainer:
         checkpoint = tf.train.Checkpoint(dtn=self.dtn,
                                          dtn_optimizer=self.dtn_op)
         self.checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=30)
-        last_checkpoint = self.checkpoint_manager.latest_checkpoint
-        checkpoint.restore(last_checkpoint)
-        if last_checkpoint:
-            self.last_epoch = int(last_checkpoint.split('-')[-1])
-            logging.info("Restored from {}".format(last_checkpoint))
+        if not self.config.args.ignore_checkpoint:
+            last_checkpoint = self.checkpoint_manager.latest_checkpoint
+            checkpoint.restore(last_checkpoint)
+            if last_checkpoint:
+                self.last_epoch = int(last_checkpoint.split('-')[-1])
+                logging.info("Restored from {}".format(last_checkpoint))
+            else:
+                logging.info("Initializing from scratch.")
         else:
-            logging.info("Initializing from scratch.")
+            logging.info("Ignoring checkpoint and initializing from scratch.")
 
     def train(self, train, val=None):
         config = self.config
@@ -194,5 +197,4 @@ class Trainer:
             spoof_counts.append(int(spoof_count))
 
         _to_plot = [image, cls_pred]
-
         return supervised_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot
