@@ -46,7 +46,7 @@ class Dataset(object):
             if png_bool:
                 img = tf.image.decode_png(img, channels=3)
             else:
-                img = tf.image.decode_bmp(img, channels=3)
+                img = tf.image.decode_bmp(img, channels=1)
             # Use `convert_image_dtype` to convert to floats in the [0,1] range.
             img = tf.image.convert_image_dtype(img, tf.float32)
             # resize the image to the desired size.
@@ -54,10 +54,11 @@ class Dataset(object):
             return tf.image.resize(img, [img_size, img_size])
 
         label = get_label(file_path)
-        tf.ensure_shape(label, [1])
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
         img = decode_img(file_path, img)
+        tf.ensure_shape(label, [1])
+        tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
         return img, label
 
     def prepare_for_training(self, dataset, cache=True, shuffle_buffer_size=1000):
