@@ -69,7 +69,7 @@ class Trainer:
         self.compile()
 
     def compile(self):
-        checkpoint_dir = self.config.args.logging_path
+        checkpoint_dir = self.config.args.checkpoint_path
         checkpoint = tf.train.Checkpoint(dtn=self.dtn,
                                          dtn_optimizer=self.dtn_op)
         self.checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=30)
