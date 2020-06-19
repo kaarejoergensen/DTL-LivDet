@@ -87,7 +87,7 @@ class Trainer:
         config = self.config
         step_per_epoch = config.args.steps
         step_per_epoch_val = config.args.steps_val
-        epochs = config.args.max_epoch
+        epochs = config.args.epochs
 
         # data stream
         it = train.feed

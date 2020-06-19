@@ -26,11 +26,9 @@ def main(args=None):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=20, help="Epochs")
+    parser.add_argument("--epochs", type=int, default=40, help="Epochs")
     parser.add_argument("--steps", type=int, default=180, help="Steps per epoch")
     parser.add_argument("--steps_val", type=int, default=180, help="Steps per epoch validation")
-    parser.add_argument("--max_epoch", type=int, default=40, help="Max epoch")
-
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--height", type=int, default=4, help="Height of the DTN")
