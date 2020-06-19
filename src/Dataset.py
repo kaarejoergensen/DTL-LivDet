@@ -47,6 +47,7 @@ class Dataset(object):
                 img = tf.image.decode_png(img, channels=3)
             else:
                 img = tf.image.decode_bmp(img, channels=1)
+                img = tf.image.grayscale_to_rgb(img)
             # Use `convert_image_dtype` to convert to floats in the [0,1] range.
             img = tf.image.convert_image_dtype(img, tf.float32)
             # resize the image to the desired size.
