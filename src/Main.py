@@ -3,8 +3,6 @@ import sys
 import traceback
 from argparse import ArgumentParser
 
-import tensorflow as tf
-
 from Config import Config
 from Dataset import Dataset
 from Trainer import Trainer
@@ -12,14 +10,12 @@ from Trainer import Trainer
 
 def main(args=None):
     try:
-        strategy = tf.distribute.MirroredStrategy()
-        with strategy.scope():
-            config = Config(args)
+        config = Config(args)
 
-            dataset = Dataset(config)
+        dataset = Dataset(config)
 
-            trainer = Trainer(config)
-            trainer.train(dataset, None)
+        trainer = Trainer(config)
+        trainer.train(dataset, None)
     except KeyboardInterrupt:
         raise
     except Exception as e:
