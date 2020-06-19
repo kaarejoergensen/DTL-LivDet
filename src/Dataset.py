@@ -46,7 +46,7 @@ class Dataset(object):
             if png_bool:
                 img = tf.image.decode_png(img, channels=3)
             else:
-                img = tf.image.decode_bmp(img, channels=0)
+                img = tf.image.decode_bmp(img)
                 img = tf.cond(tf.shape(img)[2] == 1, lambda: tf.image.grayscale_to_rgb(img), lambda: img)
             # Use `convert_image_dtype` to convert to floats in the [0,1] range.
             img = tf.image.convert_image_dtype(img, tf.float32)
