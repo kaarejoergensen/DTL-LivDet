@@ -117,9 +117,9 @@ class Trainer:
                                spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                 # plot the figure
                 if self.config.args.plot:
-                    if (step + 1) % 400 == 0:
-                        fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-train-' + str(step + 1) + '.png'
-                        plotResults(fname, _to_plot)
+                    # if (step + 1) % 400 == 0:
+                    fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-train-' + str(step + 1) + '.png'
+                    plotResults(fname, _to_plot)
 
             # save the model
             if (epoch + 1) % 1 == 0:
