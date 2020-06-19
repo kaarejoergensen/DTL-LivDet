@@ -39,8 +39,8 @@ if __name__ == '__main__':
     parser.add_argument("--checkpoint_path", default="../model", help="Path for checkpoint folder")
     parser.add_argument("--logging", default="DEBUG",
                         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], help="Logging level")
-    parser.add_argument("--plot", type=bool, default=False, help="Plot the training to files in the logs folder")
-    parser.add_argument("--modet", default="train",
+    parser.add_argument("--plot", action='store_true', help="Plot the training to files in the logs folder")
+    parser.add_argument("--mode", default="train",
                         choices=["train", "test"], help="Train or test")
 
     main(parser.parse_args())

@@ -17,7 +17,7 @@ class Dataset(object):
         logging.info("Loading data from data dir {}".format(data_path.absolute()))
         data_samples = []
         for path in data_path.rglob('*.png'):
-            if self.config.args.modet in str(path).lower():
+            if self.config.args.mode in str(path).lower():
                 data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
