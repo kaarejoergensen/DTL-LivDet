@@ -5,11 +5,11 @@
 ### -- set the job Name -- 
 #BSUB -J DTL
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 4
+#BSUB -n 6
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -gpu "num=1:mode=exclusive_process"
+#BSUB -gpu "num=2:mode=exclusive_process"
 #BSUB -R "select[gpu32gb]"
 ### -- specify that we need 2GB of memory per core/slot -- 
 #BSUB -R "rusage[mem=2GB]"
