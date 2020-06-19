@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 class Config(object):
-    IMG_SIZE = 224
+    IMG_SIZE = 256
     TRU_PARAMETERS = {
         "alpha": 1e-3,
         "beta": 1e-2,
@@ -26,13 +26,14 @@ class Config(object):
         logging.info("Arguments: {}".format(args))
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:
-            try:
-                tf.config.experimental.set_memory_growth(gpus, True)
-                tf.config.experimental.set_visible_devices(gpus, 'GPU')
-                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-                logging.info("Using {} of {} total gpus".format(logical_gpus, gpus))
-            except RuntimeError as e:
-                logging.warning("Error on GPU initialization:")
-                logging.debug(e)
+            logging.info("Using gpus: {}".format(gpus))
+            # try:
+            #     tf.config.experimental.set_memory_growth(gpus, True)
+            #     tf.config.experimental.set_visible_devices(gpus, 'GPU')
+            #     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+            #     logging.info("Using {} of {} total gpus".format(logical_gpus, gpus))
+            # except RuntimeError as e:
+            #     logging.warning("Error on GPU initialization:")
+            #     logging.debug(e)
         else:
             logging.info("No GPUs available")

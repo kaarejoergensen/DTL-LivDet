@@ -5,7 +5,6 @@ from models.Common import Downsample, Conv
 
 
 class SFL(tf.keras.Model):
-
     def __init__(self, filters, size=3, apply_batchnorm=True):
         super(SFL, self).__init__()
         self.apply_batchnorm = apply_batchnorm
@@ -25,10 +24,6 @@ class SFL(tf.keras.Model):
         self.dropout = tf.keras.layers.Dropout(0.3)
 
     def call(self, x, training):
-        # depth map branch
-        xd = self.cru1(x)
-        xd = self.conv1(xd)
-        dmap = tf.nn.sigmoid(xd)
         # class branch
         x = self.conv2(x)  # 16*16*32
         x = self.conv3(x)  # 8*8*64
@@ -38,7 +33,7 @@ class SFL(tf.keras.Model):
         x = self.dropout(x, training=training)
         x = self.fc1(x)
         cls = self.fc2(x)
-        return dmap, cls
+        return cls
 
 
 class Dense(tf.keras.Model):

@@ -60,7 +60,6 @@ class Trainer:
         # model optimizer
         self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
         # model losses
-        self.depth_map_loss = Error()
         self.class_loss = Error()
         self.route_loss = Error()
         self.uniq_loss = Error()
@@ -70,7 +69,7 @@ class Trainer:
         self.compile()
 
     def compile(self):
-        checkpoint_dir = self.config.args.logging_path
+        checkpoint_dir = self.config.args.checkpoint_path
         checkpoint = tf.train.Checkpoint(dtn=self.dtn,
                                          dtn_optimizer=self.dtn_op)
         self.checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=30)
@@ -99,22 +98,26 @@ class Trainer:
             self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
             ''' train phase'''
             for step in range(step_per_epoch):
-                depth_map_loss, class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
+                class_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot = \
                     self.train_one_step(next(it), global_step, True)
+                spoof_counts = []
+                for leaf in leaf_node_mask:
+                    spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
+                    spoof_counts.append(int(spoof_count))
+
                 # display loss
                 global_step += 1
                 logging.info(
-                    'Epoch {:d}-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                    'Epoch {:d}-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
                     'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
                         format(epoch + 1, step + 1, step_per_epoch,
-                               self.depth_map_loss(depth_map_loss),
                                self.class_loss(class_loss),
                                self.route_loss(route_loss), eigenvalue, trace,
                                self.uniq_loss(uniq_loss),
                                spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                               spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
+                               spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                 # plot the figure
-                if self.config.plot:
+                if self.config.args.plot:
                     if (step + 1) % 400 == 0:
                         fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-train-' + str(step + 1) + '.png'
                         plotResults(fname, _to_plot)
@@ -122,55 +125,55 @@ class Trainer:
             # save the model
             if (epoch + 1) % 1 == 0:
                 self.checkpoint_manager.save(checkpoint_number=epoch + 1)
-            logging.info('\n', end='\r')
 
             ''' eval phase'''
             if val is not None:
                 for step in range(step_per_epoch_val):
-                    depth_map_loss, class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
+                    class_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot = \
                         self.train_one_step(next(it_val), global_step, False)
+                    spoof_counts = []
+                    for leaf in leaf_node_mask:
+                        spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
+                        spoof_counts.append(int(spoof_count))
                     # display something
-                    logging.info('Val-{:d}/{:d}: Map:{:.3g}, Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                    logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
                                  'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
                                  format(step + 1, step_per_epoch_val,
-                                        self.depth_map_loss(depth_map_loss, val=1),
                                         self.class_loss(class_loss, val=1),
                                         self.route_loss(route_loss, val=1), eigenvalue, trace,
-                                        self.recon_loss(uniq_loss, val=1),
+                                        self.uniq_loss(uniq_loss),
                                         spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                                        spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7], ), end='\r')
+                                        spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                     # plot the figure
                     if self.config.args.plot:
                         if (step + 1) % 100 == 0:
                             fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-val-' + str(step + 1) + '.png'
                             plotResults(fname, _to_plot)
-                self.depth_map_loss.reset()
                 self.class_loss.reset()
                 self.route_loss.reset()
                 self.uniq_loss.reset()
 
             # time of one epoch
-            logging.info('\n    Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
+            logging.info('Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
         return 0
 
+    # @tf.function
     def train_one_step(self, data_batch, step, training):
         dtn = self.dtn
         dtn_op = self.dtn_op
         image, labels = data_batch
         with tf.GradientTape() as tape:
-            dmap_pred, cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, eigenvalue, trace = \
+            cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, mu, eigenvalue, trace = \
                 dtn(image, labels, True)
 
             # supervised feature loss
-            depth_map_loss = leaf_l1_loss(dmap_pred, tf.image.resize(dmap, [32, 32]), leaf_node_mask)
-            class_loss = leaf_l1_loss(cls_pred, labels, leaf_node_mask)
-            supervised_loss = depth_map_loss + 0.001 * class_loss
+            supervised_loss = leaf_l1_loss(cls_pred, labels, leaf_node_mask)
 
             # unsupervised tree loss
             route_loss = tf.reduce_mean(tf.stack(tru_loss[0], axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
             uniq_loss = tf.reduce_mean(tf.stack(tru_loss[1], axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
-            eigenvalue = np.mean(np.stack(eigenvalue, axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
-            trace = np.mean(np.stack(trace, axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
+            eigenvalue = tf.reduce_mean(tf.stack(eigenvalue, axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
+            trace = tf.reduce_mean(tf.stack(trace, axis=0) * [1., 0.5, 0.5, 0.25, 0.25, 0.25, 0.25])
             unsupervised_loss = 2 * route_loss + 0.001 * uniq_loss
 
             # total loss
@@ -183,24 +186,21 @@ class Trainer:
             # back-propagate
             gradients = tape.gradient(loss, dtn.variables)
             dtn_op.apply_gradients(zip(gradients, dtn.variables))
-
             # Update mean values for each tree node
             mu_update_rate = self.config.TRU_PARAMETERS["mu_update_rate"]
-            mu = [dtn.tru0.project.mu, dtn.tru1.project.mu, dtn.tru2.project.mu, dtn.tru3.project.mu,
-                  dtn.tru4.project.mu, dtn.tru5.project.mu, dtn.tru6.project.mu]
             for mu, mu_of_visit in zip(mu, mu_update):
                 if step == 0:
                     update_mu = mu_of_visit
                 else:
                     update_mu = mu_of_visit * mu_update_rate + mu * (1 - mu_update_rate)
-                tf.keras.backend.set_value(mu, update_mu)
+                mu = update_mu
 
         # leaf counts
-        spoof_counts = []
-        for leaf in leaf_node_mask:
-            spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
-            spoof_counts.append(int(spoof_count))
+        # spoof_counts = []
+        # for leaf in leaf_node_mask:
+        #     spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
+        #     spoof_counts.append(int(spoof_count))
 
-        _to_plot = [image, dmap, dmap_pred[0]]
+        _to_plot = [image, cls_pred]
 
-        return depth_map_loss, class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot
+        return supervised_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot

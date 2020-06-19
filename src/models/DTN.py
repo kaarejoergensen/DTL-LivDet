@@ -42,7 +42,6 @@ class DTN(tf.keras.models.Model):
 
         route_values = []
         tru_losses = []
-        maps = []
         clss = []
         leaf_node_mask = []
 
@@ -64,11 +63,10 @@ class DTN(tf.keras.models.Model):
                     route_values.append(route_value)
                     tru_losses.append(tru_loss)
                 else:
-                    slf = getattr(self, "slf_{}".format(node))
-                    cmap, cls = slf(previous_cru[int(node / 2)], training)
+                    sfl = getattr(self, "sfl_{}".format(node))
+                    cls = sfl(previous_cru[int(node / 2)], training)
                     x_tru = tf.concat([previous_tru[int(node / 2)][node % 2], mask_live], axis=1)
 
-                    maps.append(cmap)
                     clss.append(cls)
                     leaf_node_mask.append(x_tru)
                 index = index + 1
@@ -79,14 +77,16 @@ class DTN(tf.keras.models.Model):
             # for the training
             route_loss, recon_loss = map(list, zip(*tru_losses))
             mu_update = []
+            mu = []
             eigenvalue = []
             trace = []
             for index in range(self.leafs - 1):
                 tru = getattr(self, "tru_{}".format(index))
                 mu_update.append(tru.project.mu_of_visit + 0)
+                mu.append(tru.project.mu)
                 eigenvalue.append(tru.project.eigenvalue)
                 trace.append(tru.project.trace)
 
-            return maps, clss, route_values, leaf_node_mask, [route_loss, recon_loss], mu_update, eigenvalue, trace
+            return clss, route_values, leaf_node_mask, [route_loss, recon_loss], mu_update, mu, eigenvalue, trace
         else:
-            return maps, clss, route_values, leaf_node_mask
+            return clss, route_values, leaf_node_mask

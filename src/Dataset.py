@@ -33,7 +33,9 @@ class Dataset(object):
             # convert the path to a list of path components
             parts = tf.strings.split(file_path, os.path.sep)
             # The second to last is the class-directory
-            return tf.strings.regex_full_match(parts[-3], "(?i)fake")
+            fake_bool = tf.strings.regex_full_match(parts[-3], ".*(?i)fake.*")
+            fake_float = tf.dtypes.cast(fake_bool, tf.float32)
+            return tf.reshape(fake_float, [1])
 
         def decode_img(img):
             # convert the compressed string to a 3D uint8 tensor
@@ -45,6 +47,7 @@ class Dataset(object):
             return tf.image.resize(img, [img_size, img_size])
 
         label = get_label(file_path)
+        tf.ensure_shape(label, [1])
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
         img = decode_img(img)
@@ -65,7 +68,7 @@ class Dataset(object):
         # Repeat forever
         dataset = dataset.repeat()
 
-        dataset = dataset.batch(self.config.args.batch_size)
+        dataset = dataset.batch(self.config.args.batch_size, drop_remainder=True)
 
         # `prefetch` lets the dataset fetch batches in the background while the model
         # is training.
