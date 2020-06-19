@@ -10,6 +10,7 @@ from models.DTN import DTN
 
 
 def plotResults(fname, result_list):
+    logging.info("Plotting results with name {}".format(fname))
     columm = []
     for fig in result_list:
         shape = fig.shape
@@ -141,9 +142,10 @@ class Trainer:
                                         spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                     # plot the figure
                     if self.config.args.plot:
-                        if (step + 1) % 100 == 0:
-                            fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-val-' + str(step + 1) + '.png'
-                            plotResults(fname, _to_plot)
+                        # if (step + 1) % 100 == 0:
+                        fname = self.config.args.logging_path + '/epoch-' + str(epoch + 1) + '-val-' + str(
+                            step + 1) + '.png'
+                        plotResults(fname, _to_plot)
                 self.class_loss.reset()
                 self.route_loss.reset()
                 self.uniq_loss.reset()
