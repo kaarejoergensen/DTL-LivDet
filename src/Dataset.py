@@ -16,9 +16,11 @@ class Dataset(object):
         data_path = Path(self.config.args.data_path)
         logging.info("Loading data from data dir {}".format(data_path.absolute()))
         data_samples = []
-        for path in data_path.rglob('*.png'):
-            if self.config.args.mode in str(path).lower():
-                data_samples.append(str(path.absolute()))
+        types = ('*.png', '*.bmp')
+        for t in types:
+            for path in data_path.rglob(t):
+                if self.config.args.mode in str(path).lower():
+                    data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
@@ -33,13 +35,18 @@ class Dataset(object):
             # convert the path to a list of path components
             parts = tf.strings.split(file_path, os.path.sep)
             # The second to last is the class-directory
-            fake_bool = tf.strings.regex_full_match(parts[-3], ".*(?i)fake.*")
+            fake_bool = tf.strings.regex_full_match(parts[-3], ".*(?i)(fake|spoof).*")
             fake_float = tf.dtypes.cast(fake_bool, tf.float32)
             return tf.reshape(fake_float, [1])
 
-        def decode_img(img):
+        def decode_img(file_path, img):
             # convert the compressed string to a 3D uint8 tensor
-            img = tf.image.decode_png(img, channels=3)
+            parts = tf.strings.split(file_path, os.path.sep)
+            png_bool = tf.strings.regex_full_match(parts[-1], ".*(?i)png.*")
+            if png_bool:
+                img = tf.image.decode_png(img, channels=3)
+            else:
+                img = tf.image.decode_bmp(img, channels=3)
             # Use `convert_image_dtype` to convert to floats in the [0,1] range.
             img = tf.image.convert_image_dtype(img, tf.float32)
             # resize the image to the desired size.
@@ -50,7 +57,7 @@ class Dataset(object):
         tf.ensure_shape(label, [1])
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
-        img = decode_img(img)
+        img = decode_img(file_path, img)
         return img, label
 
     def prepare_for_training(self, dataset, cache=True, shuffle_buffer_size=1000):
