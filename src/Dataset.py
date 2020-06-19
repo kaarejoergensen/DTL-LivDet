@@ -46,13 +46,27 @@ class Dataset(object):
             if png_bool:
                 img = tf.image.decode_png(img, channels=3)
             else:
-                img = tf.image.decode_bmp(img, channels=1)
-                img = tf.image.grayscale_to_rgb(img)
+                img = tf.image.decode_bmp(img, channels=0)
+                img = tf.cond(tf.shape(img)[2] == 1, lambda: tf.image.grayscale_to_rgb(img), lambda: img)
             # Use `convert_image_dtype` to convert to floats in the [0,1] range.
             img = tf.image.convert_image_dtype(img, tf.float32)
             # resize the image to the desired size.
             img_size = self.config.IMG_SIZE
             return tf.image.resize(img, [img_size, img_size])
+
+        def get_type(file_path, label):
+
+            return tf.cond(tf.equal(label, tf.constant(0.)), lambda: _get_type_live(),
+                           lambda: _get_type_fake(file_path))
+
+        def _get_type_live():
+            return tf.constant("live")
+
+        def _get_type_fake(file_path):
+            parts = tf.strings.split(file_path, os.path.sep)
+            type_escaped = tf.strings.regex_replace(parts[-2], r'\s+|\d+|_', '')
+            logging.info("NEW TYPE: {}".format(type_escaped))
+            return type_escaped
 
         label = get_label(file_path)
         # load the raw data from the file as a string
