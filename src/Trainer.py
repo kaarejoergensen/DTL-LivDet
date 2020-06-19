@@ -100,9 +100,10 @@ class Trainer:
             # define the
             self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
             ''' train phase'''
-            for step in range(step_per_epoch):
+            # for step in range(step_per_epoch):
+            for data_batch in it:
                 class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
-                    self.train_one_step(next(it), global_step, True)
+                    self.train_one_step(data_batch, global_step, True)
 
                 # display loss
                 global_step += 1
@@ -116,10 +117,11 @@ class Trainer:
                                spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
                                spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                 # plot the figure
-                if self.config.args.plot:
-                    # if (step + 1) % 400 == 0:
-                    fname = self.config.LOG_DIR + '/epoch-' + str(epoch + 1) + '-train-' + str(step + 1) + '.png'
-                    plotResults(fname, _to_plot)
+                if config.args.plot:
+                    if (step + 1) % 400 == 0:
+                        fname = config.args.logging_path + '/epoch-' + str(epoch + 1) + '-train-' + str(
+                            step + 1) + '.png'
+                        plotResults(fname, _to_plot)
 
             # save the model
             if (epoch + 1) % 1 == 0:
@@ -141,11 +143,11 @@ class Trainer:
                                         spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
                                         spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                     # plot the figure
-                    if self.config.args.plot:
-                        # if (step + 1) % 100 == 0:
-                        fname = self.config.args.logging_path + '/epoch-' + str(epoch + 1) + '-val-' + str(
-                            step + 1) + '.png'
-                        plotResults(fname, _to_plot)
+                    if config.args.plot:
+                        if (step + 1) % 100 == 0:
+                            fname = config.args.logging_path + '/epoch-' + str(epoch + 1) + '-val-' + str(
+                                step + 1) + '.png'
+                            plotResults(fname, _to_plot)
                 self.class_loss.reset()
                 self.route_loss.reset()
                 self.uniq_loss.reset()
