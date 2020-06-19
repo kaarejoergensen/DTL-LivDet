@@ -65,7 +65,6 @@ class Trainer:
         self.uniq_loss = Error()
         # model saving setting
         self.last_epoch = 0
-        self.checkpoint_manager = []
         self.compile()
 
     def compile(self):
@@ -98,12 +97,8 @@ class Trainer:
             self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
             ''' train phase'''
             for step in range(step_per_epoch):
-                class_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot = \
+                class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                     self.train_one_step(next(it), global_step, True)
-                spoof_counts = []
-                for leaf in leaf_node_mask:
-                    spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
-                    spoof_counts.append(int(spoof_count))
 
                 # display loss
                 global_step += 1
@@ -129,12 +124,9 @@ class Trainer:
             ''' eval phase'''
             if val is not None:
                 for step in range(step_per_epoch_val):
-                    class_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot = \
+                    class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                         self.train_one_step(next(it_val), global_step, False)
-                    spoof_counts = []
-                    for leaf in leaf_node_mask:
-                        spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
-                        spoof_counts.append(int(spoof_count))
+
                     # display something
                     logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
                                  'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
@@ -196,11 +188,11 @@ class Trainer:
                 mu = update_mu
 
         # leaf counts
-        # spoof_counts = []
-        # for leaf in leaf_node_mask:
-        #     spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
-        #     spoof_counts.append(int(spoof_count))
+        spoof_counts = []
+        for leaf in leaf_node_mask:
+            spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
+            spoof_counts.append(int(spoof_count))
 
         _to_plot = [image, cls_pred]
 
-        return supervised_loss, route_loss, uniq_loss, leaf_node_mask, eigenvalue, trace, _to_plot
+        return supervised_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot
