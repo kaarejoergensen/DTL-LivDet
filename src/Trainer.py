@@ -100,10 +100,10 @@ class Trainer:
             # define the
             self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
             ''' train phase'''
-            # for step in range(step_per_epoch):
-            for data_batch in it:
+            for step in range(step_per_epoch):
+                # for data_batch in it:
                 class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
-                    self.train_one_step(data_batch, global_step, True)
+                    self.train_one_step(next(it), global_step, True)
 
                 # display loss
                 global_step += 1
