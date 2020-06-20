@@ -143,7 +143,7 @@ class Trainer:
 
             # save the model
             if (epoch + 1) % 1 == 0:
-                self.checkpoint_manager.save(checkpoint_number=epoch + 1)
+                self.checkpoint_manager.save(checkpoint_number=self.last_epoch + epoch + 1)
 
             ''' eval phase'''
             if dataset.feed_val:
