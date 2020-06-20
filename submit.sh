@@ -42,4 +42,4 @@ pipenv lock -r > requirements.txt
 pip install -r requirements.txt --user
 
 cd src
-python3 Main.py --ignore_checkpoint --data_path ../data/LivDet2017
+python3 Main.py --ignore_checkpoint --data_path /work3/s144852/dtl/LivDet2017 --validate

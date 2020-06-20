@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
+from Dataset import Dataset
 from Loss import leaf_l1_loss
 from models.DTN import DTN
 
@@ -84,18 +85,35 @@ class Trainer:
         else:
             logging.info("Ignoring checkpoint and initializing from scratch.")
 
-    def train(self, train, val=None):
+    def train(self):
+        config = self.config
+        epochs = config.args.epochs
+        types = config.args.training_types
+        if config.args.validate:
+            logging.info("Training with validation")
+            for val_type in types:
+                types_to_load = [t for t in types if t != val_type]
+                logging.info("Training with types {} and validation type {}".format(types_to_load, val_type))
+                dataset = Dataset(config, types_to_load, val_type)
+                self._train(dataset, int(epochs / len(types)))
+        else:
+            logging.info("Training without validation, using types {}".format(types))
+            dataset = Dataset(config, types)
+            self._train(dataset, epochs)
+
+    def _train(self, dataset, epochs):
         config = self.config
         step_per_epoch = config.args.steps
         step_per_epoch_val = config.args.steps_val
-        epochs = config.args.epochs
+        if dataset.feed_val:
+            logging.info("Training for {} epochs, with {} steps per epoch and {} steps per epoch for validation"
+                         .format(epochs, step_per_epoch, step_per_epoch_val))
+        else:
+            logging.info("Training for {} epochs, with {} steps per epoch".format(epochs, step_per_epoch))
 
         # data stream
-        it = train.feed
         global_step = self.last_epoch * step_per_epoch
-        if val is not None:
-            it_val = val.feed
-        for epoch in range(self.last_epoch, epochs):
+        for epoch in range(0, epochs):
             start = time.time()
             # define the
             self.dtn_op = tf.compat.v1.train.AdamOptimizer(config.args.lr, beta1=0.5)
@@ -103,7 +121,7 @@ class Trainer:
             for step in range(step_per_epoch):
                 # for data_batch in it:
                 class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
-                    self.train_one_step(next(it), global_step, True)
+                    self._train_one_step(next(dataset.feed), global_step, True)
 
                 # display loss
                 global_step += 1
@@ -128,10 +146,10 @@ class Trainer:
                 self.checkpoint_manager.save(checkpoint_number=epoch + 1)
 
             ''' eval phase'''
-            if val is not None:
+            if dataset.feed_val:
                 for step in range(step_per_epoch_val):
                     class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
-                        self.train_one_step(next(it_val), global_step, False)
+                        self._train_one_step(next(dataset.feed_val), global_step, False)
 
                     # display something
                     logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
@@ -154,10 +172,9 @@ class Trainer:
 
             # time of one epoch
             logging.info('Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
-        return 0
 
     # @tf.function
-    def train_one_step(self, data_batch, step, training):
+    def _train_one_step(self, data_batch, step, training):
         dtn = self.dtn
         dtn_op = self.dtn_op
         image, labels = data_batch

@@ -4,7 +4,6 @@ import traceback
 from argparse import ArgumentParser
 
 from Config import Config
-from Dataset import Dataset
 from Trainer import Trainer
 
 
@@ -12,10 +11,8 @@ def main(args=None):
     try:
         config = Config(args)
 
-        dataset = Dataset(config)
-
         trainer = Trainer(config)
-        trainer.train(dataset, None)
+        trainer.train()
     except KeyboardInterrupt:
         raise
     except Exception as e:
@@ -28,7 +25,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--epochs", type=int, default=40, help="Epochs")
     parser.add_argument("--steps", type=int, default=180, help="Steps per epoch")
-    parser.add_argument("--steps_val", type=int, default=180, help="Steps per epoch validation")
+    parser.add_argument("--steps_val", type=int, default=60, help="Steps per epoch for leave-one-out validation")
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--height", type=int, default=4, help="Height of the DTN")
@@ -41,5 +38,10 @@ if __name__ == '__main__':
     parser.add_argument("--ignore_checkpoint", action='store_true', help="Ignore checkpoint and start from scratch")
     parser.add_argument("--mode", default="train",
                         choices=["train", "test"], help="Train or test")
+    parser.add_argument("--training_types", default=["ecoflex", "bodydouble", "woodglue"],
+                        help="Specify the different types of fake samples for training (for leave-one-out validation)")
+    parser.add_argument("--testing_types", default=["latex", "liquidecoflex", "gelatine"],
+                        help="Specify the different types of fake samples for testing (for leave-one-out validation)")
+    parser.add_argument("--validate", action='store_true', help="Use leave-one-out validation")
 
     main(parser.parse_args())

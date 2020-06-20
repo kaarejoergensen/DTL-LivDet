@@ -1,34 +1,52 @@
 import logging
 import os
+import re
 from pathlib import Path
 
 import tensorflow as tf
 
 
 class Dataset(object):
-    def __init__(self, config):
+    def __init__(self, config, types_to_load, validate_type_to_load=None):
         self.config = config
         self.autotune = tf.data.experimental.AUTOTUNE
-        self.train_dataset = self.load_data()
-        self.feed = iter(self.train_dataset)
+        self.dataset, self.dataset_val = self.load_data(types_to_load, validate_type_to_load)
+        self.feed = iter(self.dataset)
+        if self.dataset_val is not None:
+            self.feed_val = iter(self.dataset_val)
+        else:
+            self.feed_val = None
 
-    def load_data(self):
+    def load_data(self, types_to_load, validate_type_to_load):
+        dataset = self._load_data(types_to_load)
+        dataset_val = None
+        if validate_type_to_load is not None:
+            dataset_val = self._load_data([validate_type_to_load])
+        return dataset, dataset_val
+
+    def _load_data(self, types_to_load):
         data_path = Path(self.config.args.data_path)
-        logging.info("Loading data from data dir {}".format(data_path.absolute()))
+        logging.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
         data_samples = []
-        types = ('*.png', '*.bmp')
-        for t in types:
-            for path in data_path.rglob(t):
-                if self.config.args.mode in str(path).lower():
+        image_types = ('*.png', '*.bmp')
+        for image_type in image_types:
+            for path in data_path.rglob(image_type):
+                path_string = str(path)
+                fake = 'fake' in path.parts[-3].lower()
+                if fake:
+                    type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
+                    if type not in types_to_load:
+                        continue
+                if self.config.args.mode in path_string.lower():
                     data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
-        train_dataset = self.prepare_for_training(labeled_dataset)
+        dataset = self.prepare_for_training(labeled_dataset)
 
         logging.info("Loaded {} data samples".format(len(data_samples)))
 
-        return train_dataset
+        return dataset
 
     def _process_path(self, file_path):
         def get_label(file_path):
@@ -53,20 +71,6 @@ class Dataset(object):
             # resize the image to the desired size.
             img_size = self.config.IMG_SIZE
             return tf.image.resize(img, [img_size, img_size])
-
-        def get_type(file_path, label):
-
-            return tf.cond(tf.equal(label, tf.constant(0.)), lambda: _get_type_live(),
-                           lambda: _get_type_fake(file_path))
-
-        def _get_type_live():
-            return tf.constant("live")
-
-        def _get_type_fake(file_path):
-            parts = tf.strings.split(file_path, os.path.sep)
-            type_escaped = tf.strings.regex_replace(parts[-2], r'\s+|\d+|_', '')
-            logging.info("NEW TYPE: {}".format(type_escaped))
-            return type_escaped
 
         label = get_label(file_path)
         # load the raw data from the file as a string
