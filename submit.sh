@@ -37,9 +37,9 @@ module load cudnn/v7.6.5.32-prod-cuda-10.1
 
 module load python/3.7.3
 
-cd ~/Documents/DTL-LivDet
+cd ~/Documents/DTL-LivDet || exit
 pipenv lock -r > requirements.txt
 pip install -r requirements.txt --user
 
-cd src
-python3 Main.py --data_path /work3/s144852/dtl/LivDet2017 --validate
+cd src || exit
+python3 Main.py --data_path /work3/s144852/dtl/LivDet2017 --validate --steps 1000
