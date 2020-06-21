@@ -26,25 +26,29 @@ class Dataset(object):
 
     def _load_data(self, types_to_load):
         data_path = Path(self.config.args.data_path)
+        mode = self.config.args.mode
         logging.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
         data_samples = []
         image_types = ('*.png', '*.bmp')
+        fake_count = 0
         for image_type in image_types:
             for path in data_path.rglob(image_type):
                 path_string = str(path)
                 fake = 'fake' in path.parts[-3].lower()
-                if fake:
-                    type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
-                    if type not in types_to_load:
-                        continue
-                if self.config.args.mode in path_string.lower():
+                if mode in path_string.lower():
+                    if fake:
+                        fake_count += 1
+                        type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
+                        if type not in types_to_load:
+                            continue
                     data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
-        dataset = self.prepare_for_training(labeled_dataset)
+        dataset = self.prepare_for_training(labeled_dataset, mode)
 
-        logging.info("Loaded {} data samples".format(len(data_samples)))
+        logging.info("Loaded {} data samples, {} fake and {} live"
+                     .format(len(data_samples), fake_count, len(data_samples) - fake_count))
 
         return dataset
 
@@ -80,7 +84,7 @@ class Dataset(object):
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
         return img, label
 
-    def prepare_for_training(self, dataset, cache=True, shuffle_buffer_size=1000):
+    def prepare_for_training(self, dataset, mode, cache=True, shuffle_buffer_size=1000):
         # This is a small dataset, only load it once, and keep it in memory.
         # use `.cache(filename)` to cache preprocessing work for datasets that don't
         # fit in memory.
@@ -93,7 +97,8 @@ class Dataset(object):
         dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
 
         # Repeat forever
-        dataset = dataset.repeat()
+        if mode == 'train':
+            dataset = dataset.repeat()
 
         dataset = dataset.batch(self.config.args.batch_size, drop_remainder=True)
 

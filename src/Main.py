@@ -4,15 +4,21 @@ import traceback
 from argparse import ArgumentParser
 
 from Config import Config
-from Trainer import Trainer
+from runners.Tester import Tester
+from runners.Trainer import Trainer
 
 
 def main(args=None):
     try:
         config = Config(args)
 
-        trainer = Trainer(config)
-        trainer.train()
+        if args.mode == 'train':
+            trainer = Trainer(config)
+            trainer.train()
+        else:
+            tester = Tester(config)
+            tester.test()
+
     except KeyboardInterrupt:
         raise
     except Exception as e:
