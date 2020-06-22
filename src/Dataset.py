@@ -7,7 +7,9 @@ import tensorflow as tf
 
 
 class Dataset(object):
-    def __init__(self, config, types_to_load, validate_type_to_load=None):
+    def __init__(self, config, types_to_load=None, validate_type_to_load=None):
+        if types_to_load is None:
+            types_to_load = []
         self.config = config
         self.autotune = tf.data.experimental.AUTOTUNE
         self.dataset, self.dataset_val = self.load_data(types_to_load, validate_type_to_load)
@@ -34,12 +36,13 @@ class Dataset(object):
         for image_type in image_types:
             for path in data_path.rglob(image_type):
                 path_string = str(path)
-                fake = 'fake' in path.parts[-3].lower()
+                fake = 'live/' not in path_string.lower()
                 if mode in path_string.lower():
                     if fake:
-                        type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
-                        if type not in types_to_load:
-                            continue
+                        if mode == 'train':
+                            type = re.sub(r'\s+|\d+|_|-', '', path.parts[-2]).lower()
+                            if type not in types_to_load:
+                                continue
                         fake_count += 1
                     data_samples.append(str(path.absolute()))
 
@@ -57,7 +60,7 @@ class Dataset(object):
             # convert the path to a list of path components
             parts = tf.strings.split(file_path, os.path.sep)
             # The second to last is the class-directory
-            fake_bool = tf.strings.regex_full_match(parts[-3], ".*(?i)(fake|spoof).*")
+            fake_bool = tf.strings.regex_full_match(file_path, ".*(?i)live.*")
             fake_float = tf.dtypes.cast(fake_bool, tf.float32)
             return tf.reshape(fake_float, [1])
 

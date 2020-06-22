@@ -45,10 +45,12 @@ if __name__ == '__main__':
     parser.add_argument("--keep_running", action='store_true', help="Keep running the training")
     parser.add_argument("--mode", default="train",
                         choices=["train", "test"], help="Train or test")
-    parser.add_argument("--training_types", default=["ecoflex", "bodydouble", "woodglue"],
+    common_types = ["ecoflex", "bodydouble", "gelatin", "gelatine", "latex",
+                    "modasil", "playdoh", "silgum", "silicone", "woodglue"]
+    parser.add_argument("--training_types", default=common_types,
                         help="Specify the different types of fake samples for training (for leave-one-out validation)")
-    parser.add_argument("--testing_types", default=["latex", "liquidecoflex", "gelatine"],
-                        help="Specify the different types of fake samples for testing (for leave-one-out validation)")
+    # parser.add_argument("--testing_types", default=[*common_types, "liquidecoflex", "oomoo", "rtv"],
+    #                     help="Specify the different types of fake samples for testing")
     parser.add_argument("--validate", action='store_true', help="Use leave-one-out validation")
 
     main(parser.parse_args())

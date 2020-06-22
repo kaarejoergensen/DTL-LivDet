@@ -12,9 +12,8 @@ class Tester(RunnerBase):
 
     def test(self):
         config = self.config
-        types = config.args.testing_types
-        logging.info("Testing using types {}".format(types))
-        dataset = Dataset(config, types)
+        logging.info("Testing using all types")
+        dataset = Dataset(config)
         self._test(dataset)
 
     def _test(self, dataset):
