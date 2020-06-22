@@ -16,7 +16,7 @@ class Trainer(RunnerBase):
         config = self.config
         epochs = config.args.epochs
         types = config.args.training_types
-        if config.args.validate:
+        if not config.args.dont_validate:
             logging.info("Training with validation")
             while True:
                 for val_type in types:

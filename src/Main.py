@@ -51,6 +51,6 @@ if __name__ == '__main__':
                         help="Specify the different types of fake samples for training (for leave-one-out validation)")
     # parser.add_argument("--testing_types", default=[*common_types, "liquidecoflex", "oomoo", "rtv"],
     #                     help="Specify the different types of fake samples for testing")
-    parser.add_argument("--validate", action='store_true', help="Use leave-one-out validation")
+    parser.add_argument("--dont_validate", action='store_true', help="Dont use leave-one-out validation")
 
     main(parser.parse_args())
