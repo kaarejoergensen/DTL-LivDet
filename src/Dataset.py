@@ -48,10 +48,11 @@ class Dataset(object):
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
-        dataset = self.prepare_for_training(labeled_dataset, mode)
+        data_sample_count = len(data_samples)
+        dataset = self.prepare_for_training(labeled_dataset, mode, shuffle_buffer_size=data_sample_count + 1000)
 
         logging.info("Loaded {} data samples, {} fake and {} live"
-                     .format(len(data_samples), fake_count, len(data_samples) - fake_count))
+                     .format(data_sample_count, fake_count, data_sample_count - fake_count))
 
         return dataset
 
