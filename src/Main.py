@@ -4,20 +4,23 @@ import traceback
 from argparse import ArgumentParser
 
 from Config import Config
-from runners.Tester import Tester
-from runners.Trainer import Trainer
+from Dataset import Dataset
 
 
 def main(args=None):
     try:
         config = Config(args)
 
-        if args.mode == 'train':
-            trainer = Trainer(config)
-            trainer.train()
-        else:
-            tester = Tester(config)
-            tester.test()
+        # if args.mode == 'train':
+        #     trainer = Trainer(config)
+        #     trainer.train()
+        # else:
+        #     tester = Tester(config)
+        #     tester.test()
+        dataset = Dataset(config, [])
+        for img, label, img_path in dataset.feed:
+            logging.info(img_path.numpy()[0])
+        logging.info("DONE")
 
     except KeyboardInterrupt:
         raise

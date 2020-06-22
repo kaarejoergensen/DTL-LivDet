@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from pathlib import Path
 
 import tensorflow as tf
@@ -35,13 +34,13 @@ class Dataset(object):
             for path in data_path.rglob(image_type):
                 path_string = str(path)
                 fake = 'fake' in path.parts[-3].lower()
-                if mode in path_string.lower():
-                    if fake:
-                        type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
-                        if type not in types_to_load:
-                            continue
-                        fake_count += 1
-                    data_samples.append(str(path.absolute()))
+                # if mode in path_string.lower():
+                if fake:
+                    # type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
+                    # if type not in types_to_load:
+                    #     continue
+                    fake_count += 1
+                data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
@@ -82,7 +81,7 @@ class Dataset(object):
         img = decode_img(file_path, img)
         tf.ensure_shape(label, [1])
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
-        return img, label
+        return img, label, file_path
 
     def prepare_for_training(self, dataset, mode, cache=True, shuffle_buffer_size=1000):
         # This is a small dataset, only load it once, and keep it in memory.
@@ -94,7 +93,7 @@ class Dataset(object):
             else:
                 dataset = dataset.cache()
 
-        dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
+        # dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
 
         # Repeat forever
         if mode == 'train':
