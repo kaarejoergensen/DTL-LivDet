@@ -18,13 +18,16 @@ class Trainer(RunnerBase):
         types = config.args.training_types
         if config.args.validate:
             logging.info("Training with validation")
-            for val_type in types:
-                types_to_load = [t for t in types if t != val_type]
-                logging.info("Training with types {} and validation type {}".format(types_to_load, val_type))
-                dataset = Dataset(config, types_to_load, val_type)
-                epochs = int((epochs + epochs % len(types)) / len(types))
-                self._train(dataset, epochs)
-                self.last_epoch += epochs
+            while True:
+                for val_type in types:
+                    types_to_load = [t for t in types if t != val_type]
+                    logging.info("Training with types {} and validation type {}".format(types_to_load, val_type))
+                    dataset = Dataset(config, types_to_load, val_type)
+                    epochs = int((epochs + epochs % len(types)) / len(types))
+                    self._train(dataset, epochs)
+                    self.last_epoch += epochs
+                if not config.args.keep_running:
+                    break
         else:
             logging.info("Training without validation, using types {}".format(types))
             dataset = Dataset(config, types)
