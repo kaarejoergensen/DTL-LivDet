@@ -55,17 +55,17 @@ class Trainer(RunnerBase):
                 class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                     self._train_one_step(next(dataset.feed), global_step, True)
 
-                # display loss
                 global_step += 1
-                logging.info(
-                    'Epoch {:d}-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
-                    'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
-                        format(epoch + 1, step + 1, step_per_epoch,
-                               self.class_loss(class_loss),
-                               self.route_loss(route_loss), eigenvalue, trace,
-                               self.uniq_loss(uniq_loss),
-                               spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                               spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
+                if step % (int(step_per_epoch / 10)) == 0:
+                    logging.info(
+                        'Epoch {:d}-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                        'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
+                            format(epoch + 1, step + 1, step_per_epoch,
+                                   self.class_loss(class_loss),
+                                   self.route_loss(route_loss), eigenvalue, trace,
+                                   self.uniq_loss(uniq_loss),
+                                   spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
+                                   spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                 # plot the figure
                 if config.args.plot:
                     if (step + 1) % 400 == 0:
@@ -82,15 +82,15 @@ class Trainer(RunnerBase):
                     class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                         self._train_one_step(next(dataset.feed_val), global_step, False)
 
-                    # display something
-                    logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
-                                 'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
-                                 format(step + 1, step_per_epoch_val,
-                                        self.class_loss(class_loss, val=1),
-                                        self.route_loss(route_loss, val=1), eigenvalue, trace,
-                                        self.uniq_loss(uniq_loss),
-                                        spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                                        spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
+                    if step % (int(step_per_epoch_val / 5)) == 0:
+                        logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                                     'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
+                                     format(step + 1, step_per_epoch_val,
+                                            self.class_loss(class_loss, val=1),
+                                            self.route_loss(route_loss, val=1), eigenvalue, trace,
+                                            self.uniq_loss(uniq_loss),
+                                            spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
+                                            spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                     # plot the figure
                     if config.args.plot:
                         if (step + 1) % 100 == 0:
