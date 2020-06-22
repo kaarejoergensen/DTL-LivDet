@@ -37,10 +37,10 @@ class Dataset(object):
                 fake = 'fake' in path.parts[-3].lower()
                 if mode in path_string.lower():
                     if fake:
-                        fake_count += 1
                         type = re.sub(r'\s+|\d+|_', '', path.parts[-2]).lower()
                         if type not in types_to_load:
                             continue
+                        fake_count += 1
                     data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
