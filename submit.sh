@@ -5,7 +5,7 @@
 ### -- set the job Name -- 
 #BSUB -J DTL
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 2
+#BSUB -n 4
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- Select the resources: 1 gpu in exclusive process mode --
