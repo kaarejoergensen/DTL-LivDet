@@ -23,9 +23,9 @@ class Trainer(RunnerBase):
                     types_to_load = [t for t in types if t != val_type]
                     logging.info("Training with types {} and validation type {}".format(types_to_load, val_type))
                     dataset = Dataset(config, types_to_load, val_type)
-                    epochs = int((epochs + epochs % len(types)) / len(types))
-                    self._train(dataset, epochs)
-                    self.last_epoch += epochs
+                    epochs_train = int((epochs + epochs % len(types)) / len(types))
+                    self._train(dataset, epochs_train)
+                    self.last_epoch += epochs_train
                 if not config.args.keep_running:
                     break
         else:
