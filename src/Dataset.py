@@ -47,7 +47,7 @@ class Dataset(object):
                         data_samples.append(str(path.absolute()))
 
         data_sample_count = len(data_samples)
-        dataset = self.prepare_for_training(data_samples, data_sample_count, mode, ''.join(types_to_load))
+        dataset = self.prepare_for_training(data_samples, data_sample_count, mode)
 
         logging.info("Loaded {} data samples, {} fake and {} live"
                      .format(data_sample_count, fake_count, data_sample_count - fake_count))
@@ -84,7 +84,7 @@ class Dataset(object):
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
         return img, label
 
-    def prepare_for_training(self, data_samples, data_sample_count, mode, cache_name=None):
+    def prepare_for_training(self, data_samples, data_sample_count, mode):
         dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         dataset = dataset.shuffle(buffer_size=data_sample_count + 1)
         dataset = dataset.interleave(
@@ -92,8 +92,7 @@ class Dataset(object):
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
             deterministic=False
         )
-        if cache_name:
-            dataset = dataset.cache("{}/{}".format(self.config.args.data_path, cache_name))
+        dataset = dataset.cache()
 
         # Repeat forever if training
         if mode == 'train':
