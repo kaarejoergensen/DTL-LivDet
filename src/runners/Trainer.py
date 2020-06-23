@@ -80,9 +80,13 @@ class Trainer(RunnerBase):
             ''' eval phase'''
             if dataset.feed_val:
                 for step in range(step_per_epoch_val):
+                    batch = next(dataset.feed_val)
+                    image, labels = batch
+                    for l in tf.unstack(labels):
+                        if l.numpy()[0] != 1.0:
+                            logging.info("WRONG: {}".format(l))
                     class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
-                        self._train_one_step(next(dataset.feed_val), global_step, False)
-
+                        self._train_one_step(batch, global_step, False)
                     if not config.args.log_less or (step + 1) % (int(step_per_epoch_val / 5)) == 0:
                         logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
                                      'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
