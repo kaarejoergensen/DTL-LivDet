@@ -111,7 +111,7 @@ class Trainer(RunnerBase):
         dtn_op = self.dtn_op
         image, labels = data_batch
         with tf.GradientTape() as tape:
-            cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, mu, eigenvalue, trace = \
+            cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, eigenvalue, trace = \
                 dtn(image, labels, True)
 
             # supervised feature loss
