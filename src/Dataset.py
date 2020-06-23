@@ -23,10 +23,10 @@ class Dataset(object):
         dataset = self._load_data(types_to_load)
         dataset_val = None
         if validate_type_to_load is not None:
-            dataset_val = self._load_data([validate_type_to_load])
+            dataset_val = self._load_data([validate_type_to_load], load_live=False)
         return dataset, dataset_val
 
-    def _load_data(self, types_to_load):
+    def _load_data(self, types_to_load, load_live=True):
         data_path = Path(self.config.args.data_path)
         mode = self.config.args.mode
         logging.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
@@ -44,7 +44,8 @@ class Dataset(object):
                             if type not in types_to_load:
                                 continue
                         fake_count += 1
-                    data_samples.append(str(path.absolute()))
+                    if fake or load_live:
+                        data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
