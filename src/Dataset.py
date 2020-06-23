@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 import re
 from pathlib import Path
 
@@ -46,15 +45,9 @@ class Dataset(object):
                         fake_count += 1
                     if fake or load_live:
                         data_samples.append(str(path.absolute()))
-        random.shuffle(data_samples)
-        list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
-        labeled_dataset = list_dataset.interleave(
-            lambda x: tf.data.Dataset.from_tensors(x).map(self._process_path, num_parallel_calls=1),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE,
-            deterministic=False
-        )
+
         data_sample_count = len(data_samples)
-        dataset = self.prepare_for_training(labeled_dataset, mode, shuffle_buffer_size=data_sample_count + 1)
+        dataset = self.prepare_for_training(data_samples, data_sample_count, mode)
 
         logging.info("Loaded {} data samples, {} fake and {} live"
                      .format(data_sample_count, fake_count, data_sample_count - fake_count))
@@ -91,19 +84,20 @@ class Dataset(object):
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
         return img, label
 
-    def prepare_for_training(self, dataset, mode, cache=True, shuffle_buffer_size=1000):
+    def prepare_for_training(self, data_samples, data_sample_count, mode):
+        dataset = tf.data.Dataset.from_tensor_slices(data_samples)
+        dataset = dataset.shuffle(buffer_size=data_sample_count + 1)
+        dataset = dataset.interleave(
+            lambda x: tf.data.Dataset.from_tensors(x).map(self._process_path, num_parallel_calls=1),
+            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            deterministic=False
+        )
         # This is a small dataset, only load it once, and keep it in memory.
         # use `.cache(filename)` to cache preprocessing work for datasets that don't
         # fit in memory.
-        if cache:
-            if isinstance(cache, str):
-                dataset = dataset.cache(cache)
-            else:
-                dataset = dataset.cache()
+        dataset = dataset.cache("{}/cache".format(self.config.args.data_path))
 
-        # dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
-
-        # Repeat forever
+        # Repeat forever if training
         if mode == 'train':
             dataset = dataset.repeat()
 
