@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import re
 from pathlib import Path
 
@@ -45,7 +46,7 @@ class Dataset(object):
                         fake_count += 1
                     if fake or load_live:
                         data_samples.append(str(path.absolute()))
-
+        random.shuffle(data_samples)
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
         labeled_dataset = list_dataset.interleave(
             lambda x: tf.data.Dataset.from_tensors(x).map(self._process_path, num_parallel_calls=1),
