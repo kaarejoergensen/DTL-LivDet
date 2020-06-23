@@ -59,10 +59,8 @@ class Dataset(object):
 
     def _process_path(self, file_path):
         def get_label(file_path):
-            # convert the path to a list of path components
-            parts = tf.strings.split(file_path, os.path.sep)
-            # The second to last is the class-directory
-            fake_bool = tf.strings.regex_full_match(file_path, ".*(?i)live.*")
+            # The path contains live if it is a live sample
+            fake_bool = tf.math.logical_not(tf.strings.regex_full_match(file_path, ".*(?i)live/.*"))
             fake_float = tf.dtypes.cast(fake_bool, tf.float32)
             return tf.reshape(fake_float, [1])
 
