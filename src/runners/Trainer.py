@@ -2,6 +2,7 @@ import logging
 import time
 
 import tensorflow as tf
+import tensorflow.keras.backend as K
 
 from Dataset import Dataset
 from Loss import leaf_l1_loss
@@ -135,12 +136,14 @@ class Trainer(RunnerBase):
             dtn_op.apply_gradients(zip(gradients, dtn.variables))
             # Update mean values for each tree node
             mu_update_rate = self.config.TRU_PARAMETERS["mu_update_rate"]
+            mu = [dtn.tru_0.project.mu, dtn.tru_1.project.mu, dtn.tru_2.project.mu, dtn.tru_3.project.mu,
+                  dtn.tru_4.project.mu, dtn.tru_5.project.mu, dtn.tru_6.project.mu]
             for mu, mu_of_visit in zip(mu, mu_update):
                 if step == 0:
                     update_mu = mu_of_visit
                 else:
                     update_mu = mu_of_visit * mu_update_rate + mu * (1 - mu_update_rate)
-                mu = update_mu
+                K.set_value(mu, update_mu)
 
         # leaf counts
         spoof_counts = []

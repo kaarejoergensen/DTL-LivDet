@@ -77,16 +77,14 @@ class DTN(tf.keras.models.Model):
             # for the training
             route_loss, recon_loss = map(list, zip(*tru_losses))
             mu_update = []
-            mu = []
             eigenvalue = []
             trace = []
             for index in range(self.leafs - 1):
                 tru = getattr(self, "tru_{}".format(index))
                 mu_update.append(tru.project.mu_of_visit + 0)
-                mu.append(tru.project.mu)
                 eigenvalue.append(tru.project.eigenvalue)
                 trace.append(tru.project.trace)
 
-            return clss, route_values, leaf_node_mask, [route_loss, recon_loss], mu_update, mu, eigenvalue, trace
+            return clss, route_values, leaf_node_mask, [route_loss, recon_loss], mu_update, eigenvalue, trace
         else:
             return clss, route_values, leaf_node_mask
