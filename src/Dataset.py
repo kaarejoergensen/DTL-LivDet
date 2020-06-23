@@ -11,7 +11,6 @@ class Dataset(object):
         if types_to_load is None:
             types_to_load = []
         self.config = config
-        self.autotune = tf.data.experimental.AUTOTUNE
         self.dataset, self.dataset_val = self.load_data(types_to_load, validate_type_to_load)
         self.feed = iter(self.dataset)
         if self.dataset_val is not None:
@@ -48,7 +47,11 @@ class Dataset(object):
                         data_samples.append(str(path.absolute()))
 
         list_dataset = tf.data.Dataset.from_tensor_slices(data_samples)
-        labeled_dataset = list_dataset.map(self._process_path, num_parallel_calls=self.autotune)
+        labeled_dataset = list_dataset.interleave(
+            lambda x: tf.data.Dataset.from_tensors(x).map(self._process_path, num_parallel_calls=1),
+            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            deterministic=False
+        )
         data_sample_count = len(data_samples)
         dataset = self.prepare_for_training(labeled_dataset, mode, shuffle_buffer_size=data_sample_count + 1)
 
@@ -97,7 +100,7 @@ class Dataset(object):
             else:
                 dataset = dataset.cache()
 
-        dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
+        # dataset = dataset.shuffle(buffer_size=shuffle_buffer_size)
 
         # Repeat forever
         if mode == 'train':
@@ -107,6 +110,6 @@ class Dataset(object):
 
         # `prefetch` lets the dataset fetch batches in the background while the model
         # is training.
-        dataset = dataset.prefetch(buffer_size=self.autotune)
+        dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
         return dataset
