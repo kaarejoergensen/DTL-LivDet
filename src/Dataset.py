@@ -86,16 +86,13 @@ class Dataset(object):
 
     def prepare_for_training(self, data_samples, data_sample_count, mode):
         dataset = tf.data.Dataset.from_tensor_slices(data_samples)
+        dataset = dataset.cache("{}/cache".format(self.config.args.data_path))
         dataset = dataset.shuffle(buffer_size=data_sample_count + 1)
         dataset = dataset.interleave(
             lambda x: tf.data.Dataset.from_tensors(x).map(self._process_path, num_parallel_calls=1),
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
             deterministic=False
         )
-        # This is a small dataset, only load it once, and keep it in memory.
-        # use `.cache(filename)` to cache preprocessing work for datasets that don't
-        # fit in memory.
-        dataset = dataset.cache("{}/cache".format(self.config.args.data_path))
 
         # Repeat forever if training
         if mode == 'train':
