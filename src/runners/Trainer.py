@@ -108,7 +108,7 @@ class Trainer(RunnerBase):
     def _train_one_step(self, data_batch, step, training):
         dtn = self.dtn
         dtn_op = self.dtn_op
-        image, labels = data_batch
+        image, labels, spoof_type = data_batch
         with tf.GradientTape() as tape:
             cls_pred, route_value, leaf_node_mask, tru_loss, mu_update, eigenvalue, trace = \
                 dtn(image, labels, True)
