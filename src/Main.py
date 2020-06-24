@@ -1,7 +1,7 @@
 import logging
 import sys
 import traceback
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 from Config import Config
 from runners.Tester import Tester
@@ -28,7 +28,7 @@ def main(args=None):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("--epochs", type=int, default=40, help="Epochs")
     parser.add_argument("--steps", type=int, default=180, help="Steps per epoch")
     parser.add_argument("--steps_val", type=int, default=60, help="Steps per epoch for leave-one-out validation")
@@ -49,8 +49,8 @@ if __name__ == '__main__':
                     "modasil", "playdoh", "silgum", "silicone", "woodglue"]
     parser.add_argument("--training_types", default=common_types,
                         help="Specify the different types of fake samples for training (for leave-one-out validation)")
-    # parser.add_argument("--testing_types", default=[*common_types, "liquidecoflex", "oomoo", "rtv"],
-    #                     help="Specify the different types of fake samples for testing")
+    parser.add_argument("--testing_types", default=[*common_types, "liquidecoflex", "oomoo", "rtv"],
+                        help="Specify the different types of fake samples for testing")
     parser.add_argument("--dont_validate", action='store_true', help="Dont use leave-one-out validation")
     parser.add_argument("--log_less", action='store_true',
                         help="Log 10 times each epoch when training instead of each step")

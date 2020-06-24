@@ -8,8 +8,6 @@ import tensorflow as tf
 
 class Dataset(object):
     def __init__(self, config, types_to_load=None, validate_type_to_load=None):
-        if types_to_load is None:
-            types_to_load = []
         self.config = config
         self.dataset, self.dataset_val = self.load_data(types_to_load, validate_type_to_load)
         self.feed = iter(self.dataset)
@@ -18,14 +16,14 @@ class Dataset(object):
         else:
             self.feed_val = None
 
-    def load_data(self, types_to_load, validate_type_to_load):
+    def load_data(self, types_to_load=None, validate_type_to_load=None):
         dataset = self._load_data(types_to_load)
         dataset_val = None
         if validate_type_to_load is not None:
             dataset_val = self._load_data([validate_type_to_load], load_live=False)
         return dataset, dataset_val
 
-    def _load_data(self, types_to_load, load_live=True):
+    def _load_data(self, types_to_load=None, load_live=True):
         data_path = Path(self.config.args.data_path)
         mode = self.config.args.mode
         logging.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
@@ -38,7 +36,7 @@ class Dataset(object):
                 fake = 'live/' not in path_string.lower()
                 if mode in path_string.lower():
                     if fake:
-                        if mode == 'train':
+                        if types_to_load is not None:
                             type = re.sub(r'\s+|\d+|_|-', '', path.parts[-2]).lower()
                             if type not in types_to_load:
                                 continue
@@ -76,13 +74,20 @@ class Dataset(object):
             img_size = self.config.IMG_SIZE
             return tf.image.resize(img, [img_size, img_size])
 
+        def get_spoof_type(label, file_path):
+            parts = tf.strings.split(file_path, os.path.sep)
+            return tf.cond(tf.equal(label, 1.),
+                           lambda: tf.strings.regex_replace(tf.strings.lower(parts[-2]), r'\s+|\d+|_|-', ''),
+                           lambda: tf.constant('live'))
+
         label = get_label(file_path)
+        spoof_type = get_spoof_type(label, file_path)
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
         img = decode_img(file_path, img)
         tf.ensure_shape(label, [1])
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
-        return img, label
+        return img, label, spoof_type
 
     def prepare_for_training(self, data_samples, data_sample_count, mode):
         dataset = tf.data.Dataset.from_tensor_slices(data_samples)
