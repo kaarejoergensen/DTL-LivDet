@@ -37,7 +37,8 @@ class Dataset(object):
                 if mode in path_string.lower():
                     if fake:
                         if types_to_load is not None:
-                            type = re.sub(r'\s+|\d+|_|-', '', path.parts[-2]).lower()
+                            type_index = -3 if 'LivDet2009' in path_string else -2
+                            type = re.sub(r'\s+|\d+|_|-', '', path.parts[type_index]).lower()
                             if type not in types_to_load:
                                 continue
                         fake_count += 1
@@ -75,10 +76,16 @@ class Dataset(object):
             return tf.image.resize(img, [img_size, img_size])
 
         def get_spoof_type(label, file_path):
-            parts = tf.strings.split(file_path, os.path.sep)
             return tf.cond(tf.equal(label, 1.),
-                           lambda: tf.strings.regex_replace(tf.strings.lower(parts[-2]), r'\s+|\d+|_|-', ''),
+                           lambda: get_spoof_type_spoof(file_path),
                            lambda: tf.constant('live'))
+
+        def get_spoof_type_spoof(file_path):
+            parts = tf.strings.split(file_path, os.path.sep)
+            spoof_index = tf.cond(tf.strings.regex_full_match(file_path, ".*LivDet2009.*"),
+                                  lambda: tf.constant(-3),
+                                  lambda: tf.constant(-2))
+            return tf.strings.regex_replace(tf.strings.lower(parts[spoof_index]), r'\s+|\d+|_|-', '')
 
         label = get_label(file_path)
         spoof_type = get_spoof_type(label, file_path)
