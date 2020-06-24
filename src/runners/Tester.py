@@ -35,20 +35,26 @@ class Tester(RunnerBase):
                 cls = cls_total[index].numpy()
                 cls_result = cls - label.numpy()
                 sp = spoof_type[index].numpy()
+                if sp not in spoof_type_incorrect_counts:
+                    spoof_type_incorrect_counts[sp] = 0
+                if sp not in spoof_type_correct_counts:
+                    spoof_type_correct_counts[sp] = 0
                 if cls_result > 0.49 or cls_result < -0.49:
-                    if sp not in spoof_type_incorrect_counts:
-                        spoof_type_incorrect_counts[sp] = 0
                     spoof_type_incorrect_counts[sp] = spoof_type_incorrect_counts[sp] + 1
                     # logging.info("WRONG: label: {}, cls: {}, cls_result: {}, type: {}"
                     #              .format(label.numpy(), cls, cls_result, spoof_type[index].numpy()))
                 else:
-                    if sp not in spoof_type_correct_counts:
-                        spoof_type_correct_counts[sp] = 0
                     spoof_type_correct_counts[sp] = spoof_type_correct_counts[sp] + 1
                     correct_count += 1
                 index += 1
             total_count += len(image)
         logging.info("Correct: {}, incorrect: {}, total: {}"
                      .format(correct_count, total_count - correct_count, total_count))
+        for key, correct in spoof_type_correct_counts.items():
+            incorrect = spoof_type_incorrect_counts[key]
+            total = correct + incorrect
+            percent_correct = 100 / total * correct
+            logging.info("Type: {}, incorrect: {}, correct: {}, total: {}, percentage correct: {}"
+                         .format(key, incorrect, correct, total, percent_correct))
         logging.info("Incorrect count: {}, correct count: {}"
                      .format(spoof_type_incorrect_counts, spoof_type_correct_counts))
