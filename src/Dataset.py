@@ -45,8 +45,6 @@ class Dataset(object):
                         fake_count += 1
                     if fake or load_live:
                         data_samples.append(str(path.absolute()))
-                        if len(data_samples) > 100:
-                            break
 
         data_sample_count = len(data_samples)
         dataset = self.prepare_for_training(data_samples, data_sample_count, mode)
