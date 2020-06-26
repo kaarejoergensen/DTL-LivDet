@@ -47,10 +47,10 @@ if __name__ == '__main__':
                         choices=["train", "test"], help="Train or test")
     common_types = ["ecoflex", "bodydouble", "gelatin", "gelatine", "latex",
                     "modasil", "playdoh", "silgum", "silicone", "woodglue"]
-    parser.add_argument("--training_types", default=common_types,
+    parser.add_argument("--training_types", default=common_types, nargs='+',
                         help="Specify the different types of fake samples for training (for leave-one-out validation)")
     parser.add_argument("--testing_types", default=[*common_types, "gelatinex", "liquidecoflex", "oomoo", "rtv"],
-                        help="Specify the different types of fake samples for testing")
+                        nargs='+', help="Specify the different types of fake samples for testing")
     parser.add_argument("--dont_validate", action='store_true', help="Dont use leave-one-out validation")
     parser.add_argument("--log_less", action='store_true',
                         help="Log 10 times each epoch when training instead of each step")
