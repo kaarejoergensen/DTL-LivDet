@@ -42,4 +42,9 @@ pipenv lock -r > requirements.txt
 pip install -r requirements.txt --user
 
 cd src || exit
-python3 Main.py --data_path /work3/s144852/dtl --epochs 100 --steps 1000 --steps_val 180
+# python3 Main.py --data_path /work3/s144852/dtl --epochs 100 --steps 1000 --steps_val 180
+python3 Main.py --mode test --data_path /work3/s144852/dtl/LivDet2009
+python3 Main.py --mode test --data_path /work3/s144852/dtl/LivDet2011
+python3 Main.py --mode test --data_path /work3/s144852/dtl/LivDet2013
+python3 Main.py --mode test --data_path /work3/s144852/dtl/LivDet2015
+python3 Main.py --mode test --data_path /work3/s144852/dtl/LivDet2017

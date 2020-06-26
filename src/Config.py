@@ -49,8 +49,8 @@ def setup_test_logger(name, logging_path, level):
     return setup_logger(name, handlers, formatter, level)
 
 
-def create_rotating_file_handler(file_path):
-    rotating_file_handler = RotatingFileHandler(filename=file_path, backupCount=5)
+def create_rotating_file_handler(file_path, backup_count=10):
+    rotating_file_handler = RotatingFileHandler(filename=file_path, backupCount=backup_count)
     if os.path.isfile(file_path):
         rotating_file_handler.doRollover()
     return rotating_file_handler
