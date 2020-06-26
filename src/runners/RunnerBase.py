@@ -33,6 +33,7 @@ class Error:
 
 class RunnerBase:
     def __init__(self, config):
+        self.logger = logging.getLogger("main")
         self.config = config
         # model
         self.dtn = DTN(32, config)
@@ -56,14 +57,14 @@ class RunnerBase:
             checkpoint.restore(last_checkpoint)
             if last_checkpoint:
                 self.last_epoch = int(last_checkpoint.split('-')[-1])
-                logging.info("Restored from {}".format(last_checkpoint))
+                self.logger.info("Restored from {}".format(last_checkpoint))
             else:
-                logging.info("Initializing from scratch.")
+                self.logger.info("Initializing from scratch.")
         else:
-            logging.info("Ignoring checkpoint and initializing from scratch.")
+            self.logger.info("Ignoring checkpoint and initializing from scratch.")
 
     def plot_results(self, fname, result_list):
-        logging.info("Plotting results with name {}".format(fname))
+        self.logger.info("Plotting results with name {}".format(fname))
         columm = []
         for fig in result_list:
             shape = fig.shape

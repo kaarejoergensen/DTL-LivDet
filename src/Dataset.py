@@ -8,6 +8,7 @@ import tensorflow as tf
 
 class Dataset(object):
     def __init__(self, config, types_to_load=None, validate_type_to_load=None):
+        self.logger = logging.getLogger("main")
         self.config = config
         self.dataset, self.dataset_val = self.load_data(types_to_load, validate_type_to_load)
         self.feed = iter(self.dataset)
@@ -26,7 +27,7 @@ class Dataset(object):
     def _load_data(self, types_to_load=None, load_live=True):
         data_path = Path(self.config.args.data_path)
         mode = self.config.args.mode
-        logging.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
+        self.logger.info("Loading data from data dir {} with types {}".format(data_path.absolute(), types_to_load))
         data_samples = []
         image_types = ('*.png', '*.bmp')
         fake_count = 0
@@ -44,12 +45,14 @@ class Dataset(object):
                         fake_count += 1
                     if fake or load_live:
                         data_samples.append(str(path.absolute()))
+                        if len(data_samples) > 100:
+                            break
 
         data_sample_count = len(data_samples)
         dataset = self.prepare_for_training(data_samples, data_sample_count, mode)
 
-        logging.info("Loaded {} data samples, {} fake and {} live"
-                     .format(data_sample_count, fake_count, data_sample_count - fake_count))
+        self.logger.info("Loaded {} data samples, {} fake and {} live"
+                         .format(data_sample_count, fake_count, data_sample_count - fake_count))
 
         return dataset
 

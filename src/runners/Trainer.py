@@ -12,17 +12,18 @@ from runners.RunnerBase import RunnerBase
 class Trainer(RunnerBase):
     def __init__(self, config):
         super().__init__(config)
+        self.logger = logging.getLogger("main")
 
     def train(self):
         config = self.config
         epochs = config.args.epochs
         types = config.args.training_types
         if not config.args.dont_validate:
-            logging.info("Training with validation")
+            self.logger.info("Training with validation")
             while True:
                 for val_type in types:
                     types_to_load = [t for t in types if t != val_type]
-                    logging.info("Training with types {} and validation type {}".format(types_to_load, val_type))
+                    self.logger.info("Training with types {} and validation type {}".format(types_to_load, val_type))
                     dataset = Dataset(config, types_to_load, val_type)
                     epochs_train = int((epochs + epochs % len(types)) / len(types))
                     self._train(dataset, epochs_train)
@@ -30,7 +31,7 @@ class Trainer(RunnerBase):
                 if not config.args.keep_running:
                     break
         else:
-            logging.info("Training without validation, using types {}".format(types))
+            self.logger.info("Training without validation, using types {}".format(types))
             dataset = Dataset(config, types)
             self._train(dataset, epochs)
 
@@ -39,10 +40,10 @@ class Trainer(RunnerBase):
         step_per_epoch = config.args.steps
         step_per_epoch_val = config.args.steps_val
         if dataset.feed_val:
-            logging.info("Training for {} epochs, with {} steps per epoch and {} steps per epoch for validation"
-                         .format(epochs, step_per_epoch, step_per_epoch_val))
+            self.logger.info("Training for {} epochs, with {} steps per epoch and {} steps per epoch for validation"
+                             .format(epochs, step_per_epoch, step_per_epoch_val))
         else:
-            logging.info("Training for {} epochs, with {} steps per epoch".format(epochs, step_per_epoch))
+            self.logger.info("Training for {} epochs, with {} steps per epoch".format(epochs, step_per_epoch))
 
         # data stream
         global_step = self.last_epoch * step_per_epoch
@@ -58,7 +59,7 @@ class Trainer(RunnerBase):
 
                 global_step += 1
                 if not config.args.log_less or (step + 1) % (int(step_per_epoch / 10)) == 0:
-                    logging.info(
+                    self.logger.info(
                         'Epoch {:d}-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
                         'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
                             format(self.last_epoch + epoch + 1, step + 1, step_per_epoch,
@@ -83,14 +84,14 @@ class Trainer(RunnerBase):
                     class_loss, route_loss, uniq_loss, spoof_counts, eigenvalue, trace, _to_plot = \
                         self._train_one_step(next(dataset.feed_val), global_step, False)
                     if not config.args.log_less or (step + 1) % (int(step_per_epoch_val / 5)) == 0:
-                        logging.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
-                                     'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
-                                     format(step + 1, step_per_epoch_val,
-                                            self.class_loss(class_loss, val=1),
-                                            self.route_loss(route_loss, val=1), eigenvalue, trace,
-                                            self.uniq_loss(uniq_loss),
-                                            spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
-                                            spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
+                        self.logger.info('Val-{:d}/{:d}: Cls:{:.3g}, Route:{:.3g}({:3.3f}, {:3.3f}), Uniq:{:.3g}, '
+                                         'Counts:[{:d},{:d},{:d},{:d},{:d},{:d},{:d},{:d}]     '.
+                                         format(step + 1, step_per_epoch_val,
+                                                self.class_loss(class_loss, val=1),
+                                                self.route_loss(route_loss, val=1), eigenvalue, trace,
+                                                self.uniq_loss(uniq_loss),
+                                                spoof_counts[0], spoof_counts[1], spoof_counts[2], spoof_counts[3],
+                                                spoof_counts[4], spoof_counts[5], spoof_counts[6], spoof_counts[7]))
                     # plot the figure
                     if config.args.plot:
                         if (step + 1) % 100 == 0:
@@ -102,7 +103,7 @@ class Trainer(RunnerBase):
                 self.uniq_loss.reset()
 
             # time of one epoch
-            logging.info('Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
+            self.logger.info('Time taken for epoch {} is {:3g} sec'.format(epoch + 1, time.time() - start))
 
     # @tf.function
     def _train_one_step(self, data_batch, step, training):

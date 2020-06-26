@@ -10,6 +10,7 @@ from models.TRU import TRU
 
 class DTN(tf.keras.models.Model):
     def __init__(self, filters, config):
+        self.logger = logging.getLogger("main")
         super(DTN, self).__init__()
 
         self.config = config
@@ -20,7 +21,7 @@ class DTN(tf.keras.models.Model):
         height = config.args.height
 
         self.leafs = int(pow(2, config.args.height) / 2)
-        logging.info("Initializing DTN with height {} and {} leaf nodes".format(height, self.leafs))
+        self.logger.info("Initializing DTN with height {} and {} leaf nodes".format(height, self.leafs))
 
         self.level_counts = [pow(2, x) for x in range(height)]
 

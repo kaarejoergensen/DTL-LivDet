@@ -9,10 +9,13 @@ from runners.RunnerBase import RunnerBase
 class Tester(RunnerBase):
     def __init__(self, config):
         super().__init__(config)
+        self.main_logger = logging.getLogger("main")
+        self.spoof_logger = logging.getLogger("test_spoof")
+        self.live_logger = logging.getLogger("test_live")
 
     def test(self):
         config = self.config
-        logging.info("Testing using all types")
+        self.main_logger.info("Testing using all types")
         dataset = Dataset(config)
         self._test(dataset)
 
@@ -39,22 +42,24 @@ class Tester(RunnerBase):
                     spoof_type_incorrect_counts[sp] = 0
                 if sp not in spoof_type_correct_counts:
                     spoof_type_correct_counts[sp] = 0
+                if sp == b'live':
+                    self.live_logger.info(cls[0])
+                else:
+                    self.spoof_logger.info(cls[0])
                 if cls_result > 0.49 or cls_result < -0.49:
                     spoof_type_incorrect_counts[sp] = spoof_type_incorrect_counts[sp] + 1
-                    # logging.info("WRONG: label: {}, cls: {}, cls_result: {}, type: {}"
-                    #              .format(label.numpy(), cls, cls_result, spoof_type[index].numpy()))
                 else:
                     spoof_type_correct_counts[sp] = spoof_type_correct_counts[sp] + 1
                     correct_count += 1
                 index += 1
             total_count += len(image)
-        logging.info("Correct: {}, incorrect: {}, total: {}"
-                     .format(correct_count, total_count - correct_count, total_count))
+        self.main_logger.info("Correct: {}, incorrect: {}, total: {}"
+                              .format(correct_count, total_count - correct_count, total_count))
         for key, correct in spoof_type_correct_counts.items():
             incorrect = spoof_type_incorrect_counts[key]
             total = correct + incorrect
             percent_correct = 100 / total * correct
-            logging.info("Type: {}, incorrect: {}, correct: {}, total: {}, percentage correct: {}"
-                         .format(key, incorrect, correct, total, percent_correct))
-        logging.info("Incorrect count: {}, correct count: {}"
-                     .format(spoof_type_incorrect_counts, spoof_type_correct_counts))
+            self.main_logger.info("Type: {}, incorrect: {}, correct: {}, total: {}, percentage correct: {}"
+                                  .format(key, incorrect, correct, total, percent_correct))
+        self.main_logger.info("Incorrect count: {}, correct count: {}"
+                              .format(spoof_type_incorrect_counts, spoof_type_correct_counts))

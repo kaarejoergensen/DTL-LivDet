@@ -18,19 +18,48 @@ class Config(object):
         logging_path = args.logging_path
         if not os.path.exists(logging_path):
             os.mkdir(logging_path)
-        file_path = "{}/main.log".format(logging_path)
-        rotating_file_handler = RotatingFileHandler(filename=file_path, backupCount=5)
-        if os.path.isfile(file_path):
-            rotating_file_handler.doRollover()
-        logging.basicConfig(level=logging.getLevelName(args.logging),
-                            format="%(asctime)s [%(levelname)s] %(message)s",
-                            handlers=[
-                                rotating_file_handler,
-                                logging.StreamHandler()
-                            ])
-        logging.info("Arguments: {}".format(args))
+        main_logger = setup_main_logger('main', logging_path, logging.getLevelName(args.logging))
+        if args.mode == 'test':
+            setup_test_logger('test_spoof', logging_path, logging.getLevelName(args.logging))
+            setup_test_logger('test_live', logging_path, logging.getLevelName(args.logging))
+        main_logger.info("Arguments: {}".format(args))
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:
-            logging.info("Using gpus: {}".format(gpus))
+            main_logger.info("Using gpus: {}".format(gpus))
         else:
-            logging.info("No GPUs available")
+            main_logger.info("No GPUs available")
+
+
+def setup_main_logger(name, logging_path, level):
+    file_path = "{}/{}.log".format(logging_path, name)
+    handlers = [
+        create_rotating_file_handler(file_path),
+        logging.StreamHandler()
+    ]
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    return setup_logger(name, handlers, formatter, level)
+
+
+def setup_test_logger(name, logging_path, level):
+    file_path = "{}/{}.log".format(logging_path, name)
+    handlers = [
+        create_rotating_file_handler(file_path)
+    ]
+    formatter = logging.Formatter("%(message)s")
+    return setup_logger(name, handlers, formatter, level)
+
+
+def create_rotating_file_handler(file_path):
+    rotating_file_handler = RotatingFileHandler(filename=file_path, backupCount=5)
+    if os.path.isfile(file_path):
+        rotating_file_handler.doRollover()
+    return rotating_file_handler
+
+
+def setup_logger(name, handlers, formatter, level):
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    for handler in handlers:
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    return logger
