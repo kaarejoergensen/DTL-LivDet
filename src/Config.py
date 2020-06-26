@@ -19,9 +19,9 @@ class Config(object):
         if not os.path.exists(logging_path):
             os.mkdir(logging_path)
         main_logger = setup_main_logger('main', logging_path, logging.getLevelName(args.logging))
-        if args.mode == 'test':
-            setup_test_logger('test_spoof', logging_path, logging.getLevelName(args.logging))
-            setup_test_logger('test_live', logging_path, logging.getLevelName(args.logging))
+        # if args.mode == 'test':
+        #    setup_test_logger('test_spoof', logging_path, logging.getLevelName(args.logging))
+        #    setup_test_logger('test_live', logging_path, logging.getLevelName(args.logging))
         main_logger.info("Arguments: {}".format(args))
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:

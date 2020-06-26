@@ -61,9 +61,8 @@ class Dataset(object):
             fake_float = tf.dtypes.cast(fake_bool, tf.float32)
             return tf.reshape(fake_float, [1])
 
-        def decode_img(file_path, img):
+        def decode_img(parts, img):
             # convert the compressed string to a 3D uint8 tensor
-            parts = tf.strings.split(file_path, os.path.sep)
             png_bool = tf.strings.regex_full_match(parts[-1], ".*(?i)png.*")
             if png_bool:
                 img = tf.image.decode_png(img, channels=3)
@@ -76,26 +75,32 @@ class Dataset(object):
             img_size = self.config.IMG_SIZE
             return tf.image.resize(img, [img_size, img_size])
 
-        def get_spoof_type(label, file_path):
+        def get_spoof_type(label, file_path, parts):
             return tf.cond(tf.equal(label, 1.),
-                           lambda: get_spoof_type_spoof(file_path),
+                           lambda: get_spoof_type_spoof(file_path, parts),
                            lambda: tf.constant('live'))
 
-        def get_spoof_type_spoof(file_path):
-            parts = tf.strings.split(file_path, os.path.sep)
+        def get_spoof_type_spoof(file_path, parts):
             spoof_index = tf.cond(tf.strings.regex_full_match(file_path, ".*LivDet2009.*"),
                                   lambda: tf.constant(-3),
                                   lambda: tf.constant(-2))
             return tf.strings.regex_replace(tf.strings.lower(parts[spoof_index]), r'\s+|\d+|_|-', '')
 
+        def get_sensor_type(parts):
+            return tf.strings.regex_replace(parts[5], r'(?i)(test|train|_)', '')
+
+        parts = tf.strings.split(file_path, os.path.sep)
+
         label = get_label(file_path)
-        spoof_type = get_spoof_type(label, file_path)
+        spoof_type = get_spoof_type(label, file_path, parts)
+        sensor_type = get_sensor_type(parts)
+        dataset_name = parts[3]
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
-        img = decode_img(file_path, img)
+        img = decode_img(parts, img)
         tf.ensure_shape(label, [1])
         tf.ensure_shape(img, [self.config.IMG_SIZE, self.config.IMG_SIZE, 3])
-        return img, label, spoof_type
+        return img, label, spoof_type, sensor_type, dataset_name
 
     def prepare_for_training(self, data_samples, data_sample_count, mode):
         dataset = tf.data.Dataset.from_tensor_slices(data_samples)

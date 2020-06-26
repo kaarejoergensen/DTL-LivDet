@@ -10,8 +10,6 @@ class Tester(RunnerBase):
     def __init__(self, config):
         super().__init__(config)
         self.main_logger = logging.getLogger("main")
-        self.spoof_logger = logging.getLogger("test_spoof")
-        self.live_logger = logging.getLogger("test_live")
 
     def test(self):
         config = self.config
@@ -24,8 +22,9 @@ class Tester(RunnerBase):
         correct_count = 0
         spoof_type_incorrect_counts = {}
         spoof_type_correct_counts = {}
+        result_map = {}
         for batch in dataset.feed:
-            image, labels, spoof_type = batch
+            image, labels, spoof_type, sensor_type, dataset_name = batch
             cls_pred, route_value, leaf_node_mask = self.dtn(image, labels, False)
             # leaf counts
             # spoof_counts = []
@@ -37,15 +36,21 @@ class Tester(RunnerBase):
             for label in tf.unstack(labels):
                 cls = cls_total[index].numpy()
                 cls_result = cls - label.numpy()
-                sp = spoof_type[index].numpy()
+                ds = str(dataset_name[index].numpy())
+                st = str(sensor_type[index].numpy())
+                sp = str(spoof_type[index].numpy())
+                if ds not in result_map:
+                    result_map[ds] = {}
+                if st not in result_map[ds]:
+                    result_map[ds][st] = {'live': [], 'spoof': []}
+                if sp == 'live':
+                    result_map[ds][st]['live'].append(cls[0])
+                else:
+                    result_map[ds][st]['spoof'].append(cls[0])
                 if sp not in spoof_type_incorrect_counts:
                     spoof_type_incorrect_counts[sp] = 0
                 if sp not in spoof_type_correct_counts:
                     spoof_type_correct_counts[sp] = 0
-                if sp == b'live':
-                    self.live_logger.info(cls[0])
-                else:
-                    self.spoof_logger.info(cls[0])
                 if cls_result > 0.49 or cls_result < -0.49:
                     spoof_type_incorrect_counts[sp] = spoof_type_incorrect_counts[sp] + 1
                 else:
@@ -63,3 +68,11 @@ class Tester(RunnerBase):
                                   .format(key, incorrect, correct, total, percent_correct))
         self.main_logger.info("Incorrect count: {}, correct count: {}"
                               .format(spoof_type_incorrect_counts, spoof_type_correct_counts))
+
+        for dataset_name, sensor_types in result_map.items():
+            for sensor_type, result_types in sensor_types.items():
+                for result_type, result_list in result_types.items():
+                    name = "testing.{}.{}.{}".format(dataset_name, sensor_type, result_type)
+                    with open("{}/{}".format(self.config.args.logging_path, name), mode='w') as f:
+                        for item in result_list:
+                            f.write("{}\n".format(item))
