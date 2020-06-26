@@ -36,9 +36,9 @@ class Tester(RunnerBase):
             for label in tf.unstack(labels):
                 cls = cls_total[index].numpy()
                 cls_result = cls - label.numpy()
-                ds = str(dataset_name[index].numpy())
-                st = str(sensor_type[index].numpy())
-                sp = str(spoof_type[index].numpy())
+                ds = dataset_name[index].numpy().decode("utf-8")
+                st = sensor_type[index].numpy().decode("utf-8")
+                sp = spoof_type[index].numpy().decode("utf-8")
                 if ds not in result_map:
                     result_map[ds] = {}
                 if st not in result_map[ds]:
