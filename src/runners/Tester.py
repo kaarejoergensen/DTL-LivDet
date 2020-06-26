@@ -40,8 +40,10 @@ class Tester(RunnerBase):
                 st = sensor_type[index].numpy().decode("utf-8")
                 sp = spoof_type[index].numpy().decode("utf-8")
                 if ds not in result_map:
+                    self.main_logger.info("Adding dataset {}".format(ds))
                     result_map[ds] = {}
                 if st not in result_map[ds]:
+                    self.main_logger.info("Adding sensor type {} to dataset {}".format(ds, st))
                     result_map[ds][st] = {'live': [], 'spoof': []}
                 if sp == 'live':
                     result_map[ds][st]['live'].append(cls[0])

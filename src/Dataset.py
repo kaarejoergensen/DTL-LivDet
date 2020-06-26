@@ -87,14 +87,14 @@ class Dataset(object):
             return tf.strings.regex_replace(tf.strings.lower(parts[spoof_index]), r'\s+|\d+|_|-', '')
 
         def get_sensor_type(parts):
-            return tf.strings.regex_replace(parts[5], r'(?i)(test|train|_)', '')
+            return tf.strings.regex_replace(parts[6], r'(?i)(test|train|_)', '')
 
         parts = tf.strings.split(file_path, os.path.sep)
 
         label = get_label(file_path)
         spoof_type = get_spoof_type(label, file_path, parts)
         sensor_type = get_sensor_type(parts)
-        dataset_name = parts[3]
+        dataset_name = parts[4]
         # load the raw data from the file as a string
         img = tf.io.read_file(file_path)
         img = decode_img(parts, img)
