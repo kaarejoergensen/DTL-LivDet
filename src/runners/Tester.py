@@ -72,6 +72,8 @@ class Tester(RunnerBase):
         self.main_logger.info("Incorrect count: {}, correct count: {}"
                               .format(spoof_type_incorrect_counts, spoof_type_correct_counts))
 
+        self.main_logger.info("Total spoof count: {}".format([sum(x) for x in zip(*total_spoof_counts)]))
+
         for dataset_name, sensor_types in result_map.items():
             for sensor_type, result_types in sensor_types.items():
                 for result_type, result_list in result_types.items():
