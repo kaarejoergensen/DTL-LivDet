@@ -23,14 +23,15 @@ class Tester(RunnerBase):
         spoof_type_incorrect_counts = {}
         spoof_type_correct_counts = {}
         result_map = {}
+        total_spoof_counts = []
         for batch in dataset.feed:
             image, labels, spoof_type, sensor_type, dataset_name = batch
             cls_pred, route_value, leaf_node_mask = self.dtn(image, labels, False)
-            # leaf counts
-            # spoof_counts = []
-            # for leaf in leaf_node_mask:
-            #     spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
-            #     spoof_counts.append(int(spoof_count))
+            spoof_counts = []
+            for leaf in leaf_node_mask:
+                spoof_count = tf.reduce_sum(leaf[:, 0]).numpy()
+                spoof_counts.append(int(spoof_count))
+            total_spoof_counts.append(spoof_counts)
             cls_total = tf.math.add_n(cls_pred) / len(cls_pred)
             index = 0
             for label in tf.unstack(labels):
@@ -78,3 +79,6 @@ class Tester(RunnerBase):
                     with open("{}/{}".format(self.config.args.logging_path, name), mode='w') as f:
                         for item in result_list:
                             f.write("{}\n".format(item))
+        with open("{}/spoof_count".format(self.config.args.logging_path), mode="w") as f:
+            for spoof_list in total_spoof_counts:
+                f.write("{}\n".format(" ".join([str(x) for x in spoof_list])))
